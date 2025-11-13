@@ -95,8 +95,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 JAZZMIN_SETTINGS = {
     "site_title": "Administración Humedal UCN",
     "site_header": "Administración Humedal",
-    "welcome_sign": "Bienvenida al Sistema UCN",
+    "welcome_sign": "Bienvenida a la plataforma de kinesiología",
     "site_brand": "UCN Proyecto Kine",
-    "site_logo": "img/logo_ucn.png",
+    "site_logo": "img/imglogo_ucn.png",
     "custom_css": "css/admin_custom.css",
     "custom_js": None, }

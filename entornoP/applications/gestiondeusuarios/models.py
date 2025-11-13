@@ -14,3 +14,6 @@ class Administrador(models.Model):
 
     def __str__(self):
         return str(self.id) + " " + self.nombre + " " + self.apellido
+
+    class Meta:
+        verbose_name_plural = "Administradores"

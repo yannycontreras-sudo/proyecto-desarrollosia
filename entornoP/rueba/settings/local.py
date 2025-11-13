@@ -28,11 +28,15 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # 🔹 Agrega esta línea:
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+
+
 JAZZMIN_SETTINGS = {
     "site_title": "Proyecto Kinesiología UCN",
     "site_header": "Proyecto Kinesiología",
     "welcome_sign": "Bienvenidos al Sistema UCN",
     "site_brand": "UCN Proyecto Kinesiología",
-    "site_logo": "img/logo_ucn.png",
+    "site_logo": "img/imglogo_ucn.png",
     "custom_css": "css/admin_custom.css",
     "custom_js": None, }

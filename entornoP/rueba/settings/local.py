@@ -11,8 +11,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'db_kine',
-        'USER': 'user_proyecto',
-        'PASSWORD': 'kine123',
+        'USER': 'postgres',
+        'PASSWORD': '1235',
         'HOST': 'localhost',
         'PORT': '5432',
 

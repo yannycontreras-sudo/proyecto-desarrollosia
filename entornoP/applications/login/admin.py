@@ -2,13 +2,128 @@ from django.contrib import admin
 from .models import *
 # Register your models here.
 
-admin.site.register(Estudiante)
-admin.site.register(Evaluacion)
-admin.site.register(Reporte)
-admin.site.register(Simulacion)
-admin.site.register(Diagnostico)
-admin.site.register(ExamenFisico)
-admin.site.register(CasoClinico)
-admin.site.register(ContenidoMultimedia)
-admin.site.register(PlanDeTratamiento)
-admin.site.register(Paciente)
+
+class EstudianteAdmin(admin.ModelAdmin):
+    list_display = (
+        'nombre',
+        'apellido',
+        'correo',
+
+
+    )
+
+
+class EvaluacionAdmin(admin.ModelAdmin):
+    list_display = (
+        'calificacion',
+        'retroalimentacion',
+        'fecha_evaluacion',
+
+
+    )
+
+
+class ReporteAdmin(admin.ModelAdmin):
+    list_display = (
+        'nombre',
+        'fecha_generacion',
+        'contenido_extraido',
+
+
+    )
+
+
+class SimulacionAdmin(admin.ModelAdmin):
+    list_display = (
+        'nombre',
+        'fecha_inicio',
+        'fecha_fin',
+        'motivo_consulta',
+        'nombre_estudiante',
+
+
+    )
+
+
+class DiagnosticoAdmin(admin.ModelAdmin):
+    list_display = (
+        'hipotesis',
+        'justificacion',
+        'fecha_envio',
+        'estado',
+
+
+    )
+
+
+class ExamenFisicoAdmin(admin.ModelAdmin):
+    list_display = (
+        'fecha_registro',
+        'fecha_examen',
+        'hallazgos',
+
+
+    )
+
+
+class CasoClinicoAdmin(admin.ModelAdmin):
+    list_display = (
+        'titulo',
+        'resumen',
+        'estado',
+
+
+    )
+
+
+class ContenidoMultimediaAdmin(admin.ModelAdmin):
+    list_display = (
+        'tipo',
+        'url_contenido',
+        'descripcion',
+
+
+    )
+
+
+class PlanDeTratamientoAdmin(admin.ModelAdmin):
+    list_display = (
+        'objetivo',
+        'detalle',
+        'fecha_envio',
+        'estado',
+
+
+    )
+
+
+class AdministradorAdmin(admin.ModelAdmin):
+    list_display = (
+        'nombre',
+        'apellido',
+        'correo',
+
+
+    )
+
+
+class PacienteAdmin(admin.ModelAdmin):
+    list_display = (
+        'nombre',
+        'apellido',
+        'correo',
+
+
+    )
+
+
+admin.site.register(Estudiante, EstudianteAdmin)
+admin.site.register(Evaluacion, EvaluacionAdmin)
+admin.site.register(Reporte, ReporteAdmin)
+admin.site.register(Simulacion, SimulacionAdmin)
+admin.site.register(Diagnostico, DiagnosticoAdmin)
+admin.site.register(ExamenFisico, ExamenFisicoAdmin)
+admin.site.register(CasoClinico, CasoClinicoAdmin)
+admin.site.register(ContenidoMultimedia, ContenidoMultimediaAdmin)
+admin.site.register(PlanDeTratamiento, PlanDeTratamientoAdmin)
+admin.site.register(Paciente, PacienteAdmin)

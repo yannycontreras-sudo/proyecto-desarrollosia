@@ -14,3 +14,9 @@ class AdministradorAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Administrador, AdministradorAdmin)
+
+class PacienteAdmin(admin.ModelAdmin):
+    list_display = ("rut", "nombre", "edad")
+    search_fields = ("rut", "nombre")
+    list_filter = ("edad",)
+    ordering = ("nombre",)

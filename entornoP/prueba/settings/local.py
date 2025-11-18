@@ -39,4 +39,10 @@ JAZZMIN_SETTINGS = {
     "site_brand": "UCN Proyecto Kinesiología",
     "site_logo": "img/imglogo_ucn.png",
     "custom_css": "css/admin_custom.css",
-    "custom_js": None, }
+    "custom_js": None, 
+    "icons": {
+    "auth.User": "fas fa-user",
+    "auth.Group": "fas fa-users",
+    "login.Paciente": "fas fa-user-injured",
+    "login.CasoClinico": "fas fa-notes-medical",
+    },}

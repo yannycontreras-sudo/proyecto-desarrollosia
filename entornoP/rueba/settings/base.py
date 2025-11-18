@@ -40,7 +40,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'prueba.urls'
+
+ROOT_URLCONF = 'rueba.urls'
 
 TEMPLATES = [
     {
@@ -57,7 +58,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'prueba.wsgi.application'
+WSGI_APPLICATION = 'rueba.wsgi.application'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

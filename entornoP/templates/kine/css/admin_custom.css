@@ -1,6 +1,6 @@
 :root {
-    --primary: #003057;
-    --secondary: #8C5E2C;
+    --primary:#6493f2;
+    --secondary: #ff2222;
     --background: #F2F2F2;
 }
 
@@ -38,8 +38,8 @@
 button.btn-primary,
 a.btn-primary,
 input[type="submit"].btn-primary {
-    background-color: #8C5E2C !important;
-    border-color: #8C5E2C !important;
+    background-color: #c30000 !important;
+    border-color: #c30000 !important;
     color: #fff !important;
 }
 
@@ -47,8 +47,8 @@ input[type="submit"].btn-primary {
 button.btn-primary:hover,
 a.btn-primary:hover,
 input[type="submit"].btn-primary:hover {
-    background-color: #6B4620 !important;
-    border-color: #6B4620 !important;
+    background-color: #6493f2 !important;
+    border-color: #6493f2 !important;
     color: #fff !important;
 }
 
@@ -103,16 +103,16 @@ a.btn-secondary:hover {
 .content-wrapper .btn.btn-success,
 .content-wrapper .btn-success,
 .card-footer .btn.btn-success {
-    background-color: #6B4620 !important;
+    background-color: #c30000 !important;
     /* verde institucional UCN */
-    border-color: #6B4620 !important;
+    border-color: #c30000 !important;
     color: #fff !important;
 }
 
 .content-wrapper .btn.btn-success:hover,
 .content-wrapper .btn-success:hover,
 .card-footer .btn.btn-success:hover {
-    background-color: #6B4620 !important;
+    background-color: #c30000 !important;
     /* verde más oscuro al hover */
-    border-color: #6B4620 !important;
+    border-color: #c30000 !important;
 }

@@ -3,28 +3,10 @@ from .models import *
 # Register your models here.
 
 
-class AdministradorAdmin(admin.ModelAdmin):
-    list_display = (
-        'nombre',
-        'apellido',
-        'correo',
+class Administrador(admin.ModelAdmin):
+    list_display = ('user', 'rut', 'cargo', 'telefono', 'fecha_creacion'),
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'rut', 'cargo'),
 
 
-    )
 
 
-admin.site.register(Administrador, AdministradorAdmin)
-
-class PacienteAdmin(admin.ModelAdmin):
-    list_display = ("rut", "nombre", "edad")
-    search_fields = ("rut", "nombre")
-    list_filter = ("edad",)
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    ordering = ("nombre",)
-=======
-    ordering = ("nombre",)
->>>>>>> Stashed changes
-=======
-    ordering = ("nombre",)
->>>>>>> Stashed changes

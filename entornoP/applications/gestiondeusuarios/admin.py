@@ -19,4 +19,8 @@ class PacienteAdmin(admin.ModelAdmin):
     list_display = ("rut", "nombre", "edad")
     search_fields = ("rut", "nombre")
     list_filter = ("edad",)
+<<<<<<< Updated upstream
     ordering = ("nombre",)
+=======
+    ordering = ("nombre",)
+>>>>>>> Stashed changes

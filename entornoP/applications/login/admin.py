@@ -119,11 +119,5 @@ class PacienteAdmin(admin.ModelAdmin):
 
 admin.site.register(Estudiante, EstudianteAdmin)
 admin.site.register(Evaluacion, EvaluacionAdmin)
-admin.site.register(Reporte, ReporteAdmin)
-admin.site.register(Simulacion, SimulacionAdmin)
-admin.site.register(Diagnostico, DiagnosticoAdmin)
-admin.site.register(ExamenFisico, ExamenFisicoAdmin)
-admin.site.register(CasoClinico, CasoClinicoAdmin)
 admin.site.register(ContenidoMultimedia, ContenidoMultimediaAdmin)
-admin.site.register(PlanDeTratamiento, PlanDeTratamientoAdmin)
-admin.site.register(Paciente, PacienteAdmin)
+

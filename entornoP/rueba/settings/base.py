@@ -22,15 +22,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core',
 
    # 'crispy_forms',
     #'crispy_bootstrap5',
 
     # aplicaciones propias
-    'applications.login',
+    'applications.core',
     'applications.gestiondeusuarios',
-    'applications.casospacientes',
+    'applications.cursos',
 ]
 
 MIDDLEWARE = [

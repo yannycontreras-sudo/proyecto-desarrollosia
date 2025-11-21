@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Edukate{% endblock %}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+    {% include "partials/navbar.html" %}
+
+    {% block content %}
+    <!-- EL CONTENIDO CAMBIA SEGÚN LA PÁGINA -->
+    {% endblock %}
+
+    {% include "partials/footer.html" %}
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

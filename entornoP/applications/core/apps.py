@@ -1,6 +1,8 @@
-from django.apps import AppConfig
+from django.urls import path
+from .views import HomeView  # importa SOLO la vista, nada de importar core.urls
 
+app_name = "core"
 
-class CoreConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'core'
+urlpatterns = [
+    path("", HomeView.as_view(), name="home"),
+]

@@ -43,6 +43,4 @@ JAZZMIN_SETTINGS = {
     "icons": {
     "auth.User": "fas fa-user",
     "auth.Group": "fas fa-users",
-    "login.Paciente": "fas fa-user-injured",
-    "login.CasoClinico": "fas fa-notes-medical",
     },}

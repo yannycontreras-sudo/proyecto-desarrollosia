@@ -22,12 +22,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core',
+
+   # 'crispy_forms',
+    #'crispy_bootstrap5',
 
     # aplicaciones propias
-    'applications.login',
+    'applications.core',
     'applications.gestiondeusuarios',
-    'applications.casospacientes',
+    'applications.cursos',
 ]
 
 MIDDLEWARE = [
@@ -39,6 +41,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 
 ROOT_URLCONF = 'rueba.urls'
 
@@ -101,3 +104,10 @@ JAZZMIN_SETTINGS = {
     "site_logo": "img/imglogo_ucn.png",
     "custom_css": "css/admin_custom.css",
     "custom_js": None, }
+
+
+AUTH_USER_MODEL = "gestiondeusuarios.User"
+
+LOGIN_URL = "gestiondeusuarios:login"
+LOGIN_REDIRECT_URL = "core:home"
+LOGOUT_REDIRECT_URL = "gestiondeusuarios:login"

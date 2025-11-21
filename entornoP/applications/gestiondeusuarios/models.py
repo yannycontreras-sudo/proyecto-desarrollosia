@@ -1,19 +1,32 @@
 from django.db import models
-from applications.login.models import Estudiante
+from django.contrib.auth.models import AbstractUser
 # Create your models here.
+# Admin, alumno y docente, class user
 
 
-class Administrador(models.Model):
-    nombre = models.CharField(
-        'Nombre del administrador', max_length=150, null=False)
-    apellido = models.CharField(
-        'Apellido del administrador', max_length=150, null=False)
-    correo = models.CharField(
-        'Correo del administrador', max_length=150, null=False)
-    estudiante = models.ForeignKey(Estudiante, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return str(self.id) + " " + self.nombre + " " + self.apellido
 
-    class Meta:
-        verbose_name_plural = "Administradores"
+class User(AbstractUser):
+    class Role(models.TextChoices):
+        STUDENT = "student", "Alumno"
+        TEACHER = "teacher", "Docente"
+        ADMIN = "admin", "Administrador"
+
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.STUDENT,
+    )
+
+    # si quieres obligar email único, hazlo en settings:
+    # ACCOUNT_UNIQUE_EMAIL = True (si usas allauth)
+    # o define unique=True en un CustomUser futuro
+
+    def is_student(self):
+        return self.role == self.Role.STUDENT
+
+    def is_teacher(self):
+        return self.role == self.Role.TEACHER
+
+    def is_admin_role(self):
+        return self.role == self.Role.ADMIN

@@ -11,8 +11,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'db_kine',
-        'USER': 'user_proyecto',
-        'PASSWORD': 'kine123',
+        'USER': 'postgres',
+        'PASSWORD': '1235',
         'HOST': 'localhost',
         'PORT': '5432',
 
@@ -39,4 +39,8 @@ JAZZMIN_SETTINGS = {
     "site_brand": "UCN Proyecto Kinesiología",
     "site_logo": "img/imglogo_ucn.png",
     "custom_css": "css/admin_custom.css",
-    "custom_js": None, }
+    "custom_js": None, 
+    "icons": {
+    "auth.User": "fas fa-user",
+    "auth.Group": "fas fa-users",
+    },}

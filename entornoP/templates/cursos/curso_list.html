@@ -1,0 +1,41 @@
+{% extends "home.html" %}
+
+{% block title %}Todos los cursos{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="display-4">Todos los cursos</h1>
+            <p class="lead">Explora los cursos disponibles en la plataforma.</p>
+        </div>
+        <div class="col-lg-4 text-lg-right">
+            <a href="{% url 'cursos:mis_cursos' %}" class="btn btn-primary mt-3">
+                Mis cursos
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for curso in cursos %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="bg-light rounded p-4 h-100 d-flex flex-column">
+                    <h4 class="mb-3">{{ curso.nombre }}</h4>
+                    <p class="flex-grow-1">
+                        {{ curso.descripcion|default:"Sin descripción" |truncatewords:25 }}
+                    </p>
+                    <a href="{% url 'cursos:detalle' curso.pk %}" class="btn btn-outline-primary mt-2">
+                        Ver curso
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No hay cursos disponibles por el momento.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

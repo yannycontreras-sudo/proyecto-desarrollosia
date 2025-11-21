@@ -62,29 +62,51 @@
     <!-- Navbar Start -->
     <div class="container-fluid p-0">
         <nav class="navbar navbar-expand-lg bg-white navbar-light py-3 py-lg-0 px-lg-5">
-            <a href="#" class="navbar-brand ml-lg-3">
-                <h1 class="m-0 text-uppercase text-primary"><i class="fa fa-book-reader mr-3"></i>Edukate</h1>
+            <a href="{% url 'core:home' %}" class="navbar-brand ml-lg-3">
+                <h1 class="m-0 text-uppercase text-primary">
+                    <i class="fa fa-book-reader mr-3"></i>Kinesiologia
+                </h1>
             </a>
             <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse justify-content-between px-lg-3" id="navbarCollapse">
                 <div class="navbar-nav mx-auto py-0">
-                    <a href="#" class="nav-item nav-link active">Home</a>
+                    <a href="{% url 'core:home' %}" class="nav-item nav-link active">Home</a>
                     <a href="#" class="nav-item nav-link">About</a>
-                    <a href="#" class="nav-item nav-link">Courses</a>
+                    <a href="{% url 'cursos:lista' %}" class="nav-item nav-link">Cursos</a>
+
+                    {# Botón "Crear curso" solo para docentes o admin #}
+                    {% if user.is_authenticated and user.role == 'teacher' %}
+                        <a href="{% url 'cursos:crear' %}" class="nav-item nav-link">
+                            Crear curso
+                        </a>
+                    {% elif user.is_authenticated and user.role == 'admin' %}
+                        <a href="{% url 'cursos:crear' %}" class="nav-item nav-link">
+                            Crear curso
+                        </a>
+                    {% endif %}
+
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Pages</a>
                         <div class="dropdown-menu m-0">
                             <a href="#" class="dropdown-item">Course Detail</a>
                             <a href="#" class="dropdown-item">Our Features</a>
-                            <a href="#" class="dropdown-item">Instructors</a>
-                            <a href="#" class="dropdown-item">Testimonial</a>
                         </div>
                     </div>
                     <a href="#" class="nav-item nav-link">Contact</a>
                 </div>
-                <a href="" class="btn btn-primary py-2 px-4 d-none d-lg-block">Join Us</a>
+
+                {# Botón derecha: Join Us o Cerrar sesión según login #}
+                {% if user.is_authenticated %}
+                    <a href="{% url 'gestiondeusuarios:logout' %}" class="btn btn-outline-primary py-2 px-4 d-none d-lg-block">
+                        Cerrar sesión
+                    </a>
+                {% else %}
+                    <a href="{% url 'gestiondeusuarios:registro' %}" class="btn btn-primary py-2 px-4 d-none d-lg-block">
+                        Join Us
+                    </a>
+                {% endif %}
             </div>
         </nav>
     </div>
@@ -133,7 +155,11 @@
                         <h6 class="d-inline-block position-relative text-secondary text-uppercase pb-2">About Us</h6>
                         <h1 class="display-4">First Choice For Online Education Anywhere</h1>
                     </div>
-                    <p>Tempor erat elitr at rebum at at clita aliquyam consetetur...</p>
+                    <p>
+                        Tempor erat elitr at rebum at at clita aliquyam consetetur. Diam dolor diam ipsum sit.
+                        Aliquyam diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita
+                        duo justo magna dolore erat amet.
+                    </p>
                     <div class="row pt-3 mx-0">
                         <div class="col-3 px-0">
                             <div class="bg-success text-center p-4">
@@ -165,8 +191,7 @@
         </div>
     </div>
 
-    {# …todo el resto de secciones que quieras mantener (Features, Courses, Team, Testimonial, Contact, etc.)
-       simplemente cambia todos los src="img/..." por src="{% static 'img/...' %}" igual que en about.jpg #}
+    {# Aquí puedes seguir pegando las secciones de Features, Courses, Team, Testimonial, Contact, etc. #}
 
     {% endblock content %}
     {# =================== FIN CONTENIDO VARIABLE =================== #}
@@ -174,17 +199,23 @@
     <!-- Footer Start -->
     <div class="container-fluid position-relative overlay-top bg-dark text-white-50 py-5" style="margin-top: 90px;">
         <div class="container mt-5 pt-5">
-            <!-- ... footer original ... -->
+            <!-- contenido de footer -->
         </div>
     </div>
     <div class="container-fluid bg-dark text-white-50 border-top py-4" style="border-color: rgba(256, 256, 256, .1) !important;">
         <div class="container">
             <div class="row">
                 <div class="col-md-6 text-center text-md-left mb-3 mb-md-0">
-                    <p class="m-0">Copyright &copy; <a class="text-white" href="#">Your Site Name</a>. All Rights Reserved.</p>
+                    <p class="m-0">
+                        Copyright &copy;
+                        <a class="text-white" href="#">Your Site Name</a>. All Rights Reserved.
+                    </p>
                 </div>
                 <div class="col-md-6 text-center text-md-right">
-                    <p class="m-0">Designed by <a class="text-white" href="https://htmlcodex.com">HTML Codex</a> Distributed by <a href="https://themewagon.com" target="_blank">ThemeWagon</a></p>
+                    <p class="m-0">
+                        Designed by <a class="text-white" href="https://htmlcodex.com">HTML Codex</a>
+                        Distributed by <a href="https://themewagon.com" target="_blank">ThemeWagon</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -192,7 +223,9 @@
     <!-- Footer End -->
 
     <!-- Back to Top -->
-    <a href="#" class="btn btn-lg btn-primary rounded-0 btn-lg-square back-to-top"><i class="fa fa-angle-double-up"></i></a>
+    <a href="#" class="btn btn-lg btn-primary rounded-0 btn-lg-square back-to-top">
+        <i class="fa fa-angle-double-up"></i>
+    </a>
 
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>

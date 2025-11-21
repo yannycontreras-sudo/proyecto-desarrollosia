@@ -1,0 +1,94 @@
+{% extends "home.html" %}
+
+{% block title %}{{ curso.nombre }}{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+
+    <!-- Cabecera del curso -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="display-4">{{ curso.nombre }}</h1>
+            <p class="lead">
+                {{ curso.descripcion|default:"Este curso aún no tiene descripción." }}
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-right">
+            {% if esta_inscrito %}
+                <span class="badge badge-success p-2 mt-3 d-inline-block">
+                    Ya estás inscrito en este curso
+                </span>
+            {% else %}
+                <form method="post" action="{% url 'cursos:inscribirse' curso.pk %}" class="mt-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        Inscribirme en este curso
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Módulos y contenidos -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-3">Contenido del curso</h3>
+
+            {% if modulos %}
+                <div class="accordion" id="modulosAccordion">
+                    {% for modulo in modulos %}
+                        <div class="card mb-2">
+                            <div class="card-header" id="heading{{ modulo.id }}">
+                                <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                                    <button class="btn btn-link" type="button" data-toggle="collapse"
+                                            data-target="#collapse{{ modulo.id }}" aria-expanded="true"
+                                            aria-controls="collapse{{ modulo.id }}">
+                                        Módulo {{ forloop.counter }}: {{ modulo.titulo }}
+                                    </button>
+                                    {% if modulo.descripcion %}
+                                        <small class="text-muted ml-3 d-none d-md-inline">
+                                            {{ modulo.descripcion|truncatewords:12 }}
+                                        </small>
+                                    {% endif %}
+                                </h5>
+                            </div>
+
+                            <div id="collapse{{ modulo.id }}"
+                                 class="collapse {% if forloop.first %}show{% endif %}"
+                                 aria-labelledby="heading{{ modulo.id }}"
+                                 data-parent="#modulosAccordion">
+                                <div class="card-body">
+                                    {% if modulo.contenidos.all %}
+                                        <ul class="list-group list-group-flush">
+                                            {% for contenido in modulo.contenidos.all %}
+                                                <li class="list-group-item">
+                                                    <strong>{{ contenido.titulo }}</strong><br>
+                                                    <small class="text-muted">
+                                                        {{ contenido.descripcion|default:"Sin descripción."|truncatewords:20 }}
+                                                    </small>
+                                                </li>
+                                            {% empty %}
+                                                <li class="list-group-item">
+                                                    <small class="text-muted">Este módulo aún no tiene contenidos.</small>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted mb-0">
+                                            Este módulo aún no tiene contenidos.
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">
+                    Este curso aún no tiene módulos creados.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

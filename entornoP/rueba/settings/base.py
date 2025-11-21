@@ -104,3 +104,10 @@ JAZZMIN_SETTINGS = {
     "site_logo": "img/imglogo_ucn.png",
     "custom_css": "css/admin_custom.css",
     "custom_js": None, }
+
+
+AUTH_USER_MODEL = "gestiondeusuarios.User"
+
+LOGIN_URL = "gestiondeusuarios:login"
+LOGIN_REDIRECT_URL = "core:home"
+LOGOUT_REDIRECT_URL = "gestiondeusuarios:login"

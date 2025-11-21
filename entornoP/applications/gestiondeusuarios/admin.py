@@ -1,12 +1,12 @@
 from django.contrib import admin
-from .models import *
-# Register your models here.
+from django.contrib.auth.admin import UserAdmin
+from .models import User
 
 
-class Administrador(admin.ModelAdmin):
-    list_display = ('user', 'rut', 'cargo', 'telefono', 'fecha_creacion'),
-    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'rut', 'cargo'),
-
-
-
-
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    fieldsets = UserAdmin.fieldsets + (
+        ("Rol", {"fields": ("role",)}),
+    )
+    list_display = ("username", "email", "role", "is_staff", "is_superuser")
+    list_filter = ("role", "is_staff", "is_superuser")

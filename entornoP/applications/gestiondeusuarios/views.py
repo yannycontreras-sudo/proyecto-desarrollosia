@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages   
 
 from .forms import RegistroForm, LoginForm
 
@@ -31,4 +32,4 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect("login")
+    return redirect("gestiondeusuarios:login")

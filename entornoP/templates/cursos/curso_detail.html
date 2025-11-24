@@ -8,12 +8,16 @@
     <!-- CABECERA DEL CURSO -->
     <div class="row mb-4">
         <div class="col-lg-8">
-            <h1 class="display-4">{{ curso.nombre }}</h1>
+            <h1 class="display-4">
+                {{ curso.nombre }}
+                <small class="text-muted" style="font-size: 0.7em;">
+                    (ID: {{ curso.id }})
+                </small>
+            </h1>
             <p class="lead">
                 {{ curso.descripcion|default:"Este curso aún no tiene descripción." }}
             </p>
         </div>
-
         <div class="col-lg-4 text-lg-right">
 
             {# BOTONES DOCENTE / ADMIN #}
@@ -56,18 +60,47 @@
                             <!-- ENCABEZADO DEL MÓDULO -->
                             <div class="card-header d-flex justify-content-between align-items-center">
 
-                                <button class="btn btn-link" type="button" data-toggle="collapse"
-                                        data-target="#mod{{ modulo.id }}" aria-expanded="false"
-                                        aria-controls="mod{{ modulo.id }}">
-                                    Módulo {{ forloop.counter }}: {{ modulo.titulo }}
-                                </button>
+                                <div>
+                                    <button class="btn btn-link p-0" type="button" data-toggle="collapse"
+                                            data-target="#mod{{ modulo.id }}" aria-expanded="false"
+                                            aria-controls="mod{{ modulo.id }}">
+                                        Módulo {{ forloop.counter }}: {{ modulo.titulo }}
+                                    </button>
 
-                                {# BOTÓN EDITAR MÓDULO SOLO DOCENTE/ADMIN #}
-                                {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
-                                    <a href="{% url 'cursos:modulo_editar' modulo.pk %}" class="btn btn-sm btn-outline-secondary">
-                                        Editar módulo
-                                    </a>
-                                {% endif %}
+                                    {# Estado del módulo: Publicado / Oculto (solo docente/admin) #}
+                                    {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
+                                        {% if modulo.publicado %}
+                                            <span class="badge badge-success ml-2">Publicado</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary ml-2">Oculto</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    {# BOTÓN EDITAR MÓDULO SOLO DOCENTE/ADMIN #}
+                                    {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
+                                        <a href="{% url 'cursos:modulo_editar' modulo.pk %}"
+                                           class="btn btn-sm btn-outline-secondary mr-2">
+                                            Editar módulo
+                                        </a>
+
+                                        <form method="post"
+                                              action="{% url 'cursos:modulo_toggle_publicacion' modulo.pk %}"
+                                              style="display:inline;">
+                                            {% csrf_token %}
+                                            {% if modulo.publicado %}
+                                                <button type="submit" class="btn btn-sm btn-warning">
+                                                    Ocultar
+                                                </button>
+                                            {% else %}
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    Publicar
+                                                </button>
+                                            {% endif %}
+                                        </form>
+                                    {% endif %}
+                                </div>
                             </div>
 
                             <!-- CONTENIDO DEL MÓDULO -->

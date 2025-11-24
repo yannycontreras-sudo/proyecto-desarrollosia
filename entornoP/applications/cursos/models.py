@@ -43,13 +43,13 @@ class Inscripcion(models.Model):
 
 
 class Modulo(models.Model):
-    curso = models.ForeignKey("Curso", on_delete=models.CASCADE, related_name="modulos")
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name="modulos")
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True)
     orden = models.PositiveIntegerField(default=1)
 
-    class Meta:
-        ordering = ["curso", "orden"]
+    # 👇 nuevo campo
+    publicado = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.curso.nombre} - {self.titulo}"

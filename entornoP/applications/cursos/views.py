@@ -30,23 +30,28 @@ class CursoDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         curso = self.object
+        user = self.request.user
 
+        # Todos los módulos del curso
         modulos = (
             Modulo.objects
             .filter(curso=curso)
             .order_by("orden")
             .prefetch_related("contenidos")
         )
-        context["modulos"] = modulos
 
-        user = self.request.user
+        # 👇 Si es alumno (role == "student"), solo ve módulos publicados
+        # Docentes/admin/superuser ven todos
+        if getattr(user, "role", None) == "student" and not user.is_superuser:
+            modulos = modulos.filter(publicado=True)
+
+        context["modulos"] = modulos
         context["esta_inscrito"] = Inscripcion.objects.filter(
             usuario=user,
-            curso=curso,
+            curso=curso
         ).exists()
 
         return context
-
 
 @login_required
 def mis_cursos_view(request):
@@ -82,18 +87,24 @@ class CursoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Curso
     form_class = CursoForm
     template_name = "cursos/curso_form.html"
-    success_url = reverse_lazy("cursos:lista")
 
+    # 👇 QUIÉN PUEDE CREAR CURSOS
     def test_func(self):
         user = self.request.user
+        # solo docentes, admins o superusuarios
         return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        curso = self.object
-        user = self.request.user
-        curso.docentes.add(user)
+        response = super().form_valid(form)  # aquí se guarda el curso
+        messages.success(
+            self.request,
+            f"Curso creado correctamente. ID del curso: {self.object.id}",
+        )
         return response
+
+    def get_success_url(self):
+        return reverse_lazy("cursos:detalle", kwargs={"pk": self.object.pk})
+
 
 
 class CursoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -148,6 +159,26 @@ class ModuloUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy("cursos:detalle", kwargs={"pk": self.object.curso.pk})
     
+@login_required
+def modulo_toggle_publicacion_view(request, pk):
+    modulo = get_object_or_404(Modulo, pk=pk)
+    user = request.user
+
+    # solo teacher / admin / superuser pueden cambiar esto
+    if getattr(user, "role", None) not in ("teacher", "admin") and not user.is_superuser:
+        messages.error(request, "No tienes permiso para cambiar la publicación de este módulo.")
+        return redirect("cursos:detalle", pk=modulo.curso.pk)
+
+    # alternar True/False
+    modulo.publicado = not modulo.publicado
+    modulo.save()
+
+    if modulo.publicado:
+        messages.success(request, f"El módulo «{modulo.titulo}» ahora está PUBLICADO.")
+    else:
+        messages.info(request, f"El módulo «{modulo.titulo}» ahora está OCULTO.")
+
+    return redirect("cursos:detalle", pk=modulo.curso.pk)
 
 
 

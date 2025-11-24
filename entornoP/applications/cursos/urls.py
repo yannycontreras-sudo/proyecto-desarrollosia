@@ -10,6 +10,7 @@ from .views import (
     ModuloUpdateView,
     ContenidoCreateView,
     ContenidoUpdateView,
+    modulo_toggle_publicacion_view, 
 )
 
 app_name = "cursos"
@@ -26,6 +27,7 @@ urlpatterns = [
     # módulos
     path("<int:curso_pk>/modulos/crear/", ModuloCreateView.as_view(), name="modulo_crear"),
     path("modulos/<int:pk>/editar/", ModuloUpdateView.as_view(), name="modulo_editar"),
+    path("modulos/<int:pk>/toggle-publicacion/", modulo_toggle_publicacion_view, name="modulo_toggle_publicacion"),
 
     # contenidos
     path(

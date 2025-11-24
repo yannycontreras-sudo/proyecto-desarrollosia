@@ -11,7 +11,8 @@ User = get_user_model()
 class RegistroForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "email", "role")
+        # 👇 ya NO ponemos "role" aquí
+        fields = ("username", "email")
 
     def clean_email(self):
         email = self.cleaned_data.get("email", "").strip().lower()
@@ -29,6 +30,15 @@ class RegistroForm(UserCreationForm):
             raise ValidationError("Solo se permiten correos @ucn.cl o @alumnos.ucn.cl.")
 
         return email
+
+    def save(self, commit=True):
+        # llamamos a UserCreationForm.save() pero SIN guardar todavía
+        user = super().save(commit=False)
+        # 👇 rol fijo para todos los que se registran por el front
+        user.role = "student"   # o el valor que uses internamente para "Alumno"
+        if commit:
+            user.save()
+        return user
 
 class LoginForm(AuthenticationForm):
     # solo cambiamos labels / clases si quieres

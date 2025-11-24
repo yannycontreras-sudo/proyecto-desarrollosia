@@ -43,11 +43,7 @@ class Inscripcion(models.Model):
 
 
 class Modulo(models.Model):
-    curso = models.ForeignKey(
-        Curso,
-        on_delete=models.CASCADE,
-        related_name="modulos",
-    )
+    curso = models.ForeignKey("Curso", on_delete=models.CASCADE, related_name="modulos")
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True)
     orden = models.PositiveIntegerField(default=1)
@@ -56,7 +52,7 @@ class Modulo(models.Model):
         ordering = ["curso", "orden"]
 
     def __str__(self):
-        return f"{self.curso} - {self.titulo}"
+        return f"{self.curso.nombre} - {self.titulo}"
 
 
 class Simulacion(models.Model):
@@ -74,20 +70,25 @@ class Simulacion(models.Model):
 
 
 class Contenido(models.Model):
-    # 1 módulo -> N contenidos (1:N)
-    modulo = models.ForeignKey(
-        Modulo,
-        on_delete=models.CASCADE,
-        related_name="contenidos",
-    )
+    modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name="contenidos")
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True)
 
-    # opcional: tipo de contenido (video, pdf, quiz introductorio, etc.)
-    # tipo = models.CharField(max_length=50, blank=True)
+    # permitir vacíos para filas que ya existen
+    archivo = models.FileField(upload_to="contenidos/", null=True, blank=True)
 
     def __str__(self):
         return self.titulo
+
+    @property
+    def es_video(self):
+        nombre = (self.archivo.name or "").lower()
+        return nombre.endswith((".mp4", ".webm", ".ogg"))
+
+    @property
+    def es_imagen(self):
+        nombre = (self.archivo.name or "").lower()
+        return nombre.endswith((".jpg", ".jpeg", ".png", ".gif", ".webp"))
 
 
 class Examen(models.Model):

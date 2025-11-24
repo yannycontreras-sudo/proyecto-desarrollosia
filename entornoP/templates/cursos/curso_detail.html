@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container py-5">
 
-    <!-- Cabecera del curso -->
+    <!-- CABECERA DEL CURSO -->
     <div class="row mb-4">
         <div class="col-lg-8">
             <h1 class="display-4">{{ curso.nombre }}</h1>
@@ -13,9 +13,22 @@
                 {{ curso.descripcion|default:"Este curso aún no tiene descripción." }}
             </p>
         </div>
+
         <div class="col-lg-4 text-lg-right">
+
+            {# BOTONES DOCENTE / ADMIN #}
+            {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
+                <a href="{% url 'cursos:editar' curso.pk %}" class="btn btn-outline-secondary mb-2">
+                    Editar curso
+                </a>
+                <a href="{% url 'cursos:modulo_crear' curso.pk %}" class="btn btn-primary mb-2">
+                    Crear módulo
+                </a>
+            {% endif %}
+
+            {# INSCRIPCIÓN ALUMNO #}
             {% if esta_inscrito %}
-                <span class="badge badge-success p-2 mt-3 d-inline-block">
+                <span class="badge badge-success p-2 d-block mt-2">
                     Ya estás inscrito en este curso
                 </span>
             {% else %}
@@ -29,64 +42,111 @@
         </div>
     </div>
 
-    <!-- Módulos y contenidos -->
+    <!-- MÓDULOS -->
     <div class="row">
         <div class="col-12">
             <h3 class="mb-3">Contenido del curso</h3>
 
             {% if modulos %}
                 <div class="accordion" id="modulosAccordion">
+
                     {% for modulo in modulos %}
                         <div class="card mb-2">
-                            <div class="card-header" id="heading{{ modulo.id }}">
-                                <h5 class="mb-0 d-flex justify-content-between align-items-center">
-                                    <button class="btn btn-link" type="button" data-toggle="collapse"
-                                            data-target="#collapse{{ modulo.id }}" aria-expanded="true"
-                                            aria-controls="collapse{{ modulo.id }}">
-                                        Módulo {{ forloop.counter }}: {{ modulo.titulo }}
-                                    </button>
-                                    {% if modulo.descripcion %}
-                                        <small class="text-muted ml-3 d-none d-md-inline">
-                                            {{ modulo.descripcion|truncatewords:12 }}
-                                        </small>
-                                    {% endif %}
-                                </h5>
+
+                            <!-- ENCABEZADO DEL MÓDULO -->
+                            <div class="card-header d-flex justify-content-between align-items-center">
+
+                                <button class="btn btn-link" type="button" data-toggle="collapse"
+                                        data-target="#mod{{ modulo.id }}" aria-expanded="false"
+                                        aria-controls="mod{{ modulo.id }}">
+                                    Módulo {{ forloop.counter }}: {{ modulo.titulo }}
+                                </button>
+
+                                {# BOTÓN EDITAR MÓDULO SOLO DOCENTE/ADMIN #}
+                                {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
+                                    <a href="{% url 'cursos:modulo_editar' modulo.pk %}" class="btn btn-sm btn-outline-secondary">
+                                        Editar módulo
+                                    </a>
+                                {% endif %}
                             </div>
 
-                            <div id="collapse{{ modulo.id }}"
+                            <!-- CONTENIDO DEL MÓDULO -->
+                            <div id="mod{{ modulo.id }}"
                                  class="collapse {% if forloop.first %}show{% endif %}"
-                                 aria-labelledby="heading{{ modulo.id }}"
                                  data-parent="#modulosAccordion">
                                 <div class="card-body">
+
+                                    {# BOTÓN AÑADIR CONTENIDO (IMÁGENES/VIDEOS) SOLO DOCENTE/ADMIN #}
+                                    {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
+                                        <a href="{% url 'cursos:contenido_crear' modulo.pk %}"
+                                           class="btn btn-sm btn-primary mb-3">
+                                            Añadir contenido
+                                        </a>
+                                    {% endif %}
+
                                     {% if modulo.contenidos.all %}
                                         <ul class="list-group list-group-flush">
                                             {% for contenido in modulo.contenidos.all %}
                                                 <li class="list-group-item">
-                                                    <strong>{{ contenido.titulo }}</strong><br>
-                                                    <small class="text-muted">
-                                                        {{ contenido.descripcion|default:"Sin descripción."|truncatewords:20 }}
-                                                    </small>
+
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div class="mr-3">
+                                                            <strong>{{ contenido.titulo }}</strong><br>
+
+                                                            {# MOSTRAR IMAGEN O VIDEO #}
+                                                            {% if contenido.archivo %}
+                                                                {% if contenido.es_imagen %}
+                                                                    <img src="{{ contenido.archivo.url }}"
+                                                                         alt="{{ contenido.titulo }}"
+                                                                         class="img-fluid mt-2">
+                                                                {% elif contenido.es_video %}
+                                                                    <video controls class="mt-2" style="max-width:100%;">
+                                                                        <source src="{{ contenido.archivo.url }}" type="video/mp4">
+                                                                        Tu navegador no soporta la reproducción de video.
+                                                                    </video>
+                                                                {% else %}
+                                                                    <a href="{{ contenido.archivo.url }}" target="_blank" class="mt-2 d-inline-block">
+                                                                        Descargar archivo
+                                                                    </a>
+                                                                {% endif %}
+                                                            {% endif %}
+
+                                                            {% if contenido.descripcion %}
+                                                                <br>
+                                                                <small class="text-muted">
+                                                                    {{ contenido.descripcion }}
+                                                                </small>
+                                                            {% endif %}
+                                                        </div>
+
+                                                        {# BOTÓN EDITAR CONTENIDO SOLO DOCENTE/ADMIN #}
+                                                        {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
+                                                            <a href="{% url 'cursos:contenido_editar' contenido.pk %}"
+                                                               class="btn btn-sm btn-outline-secondary">
+                                                                Editar
+                                                            </a>
+                                                        {% endif %}
+                                                    </div>
+
                                                 </li>
                                             {% empty %}
                                                 <li class="list-group-item">
-                                                    <small class="text-muted">Este módulo aún no tiene contenidos.</small>
+                                                    <em class="text-muted">Este módulo aún no tiene contenidos.</em>
                                                 </li>
                                             {% endfor %}
                                         </ul>
                                     {% else %}
-                                        <p class="text-muted mb-0">
-                                            Este módulo aún no tiene contenidos.
-                                        </p>
+                                        <p class="text-muted">Este módulo aún no tiene contenidos.</p>
                                     {% endif %}
+
                                 </div>
                             </div>
                         </div>
                     {% endfor %}
+
                 </div>
             {% else %}
-                <p class="text-muted">
-                    Este curso aún no tiene módulos creados.
-                </p>
+                <p class="text-muted">Este curso aún no tiene módulos creados.</p>
             {% endif %}
         </div>
     </div>

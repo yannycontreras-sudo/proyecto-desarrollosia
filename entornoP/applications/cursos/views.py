@@ -1,14 +1,18 @@
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
-from .models import Curso, Inscripcion, Modulo
-from .forms import CursoForm
+from .models import Curso, Inscripcion, Modulo, Contenido
+from .forms import CursoForm, ModuloForm, ContenidoForm
 
+
+    ##############################################################
+    ##############################################################
+    #CURSOS
 
 @method_decorator(login_required, name="dispatch")
 class CursoListView(ListView):
@@ -27,7 +31,6 @@ class CursoDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         curso = self.object
 
-        # módulos y contenidos del curso
         modulos = (
             Modulo.objects
             .filter(curso=curso)
@@ -36,7 +39,6 @@ class CursoDetailView(DetailView):
         )
         context["modulos"] = modulos
 
-        # saber si el usuario está inscrito
         user = self.request.user
         context["esta_inscrito"] = Inscripcion.objects.filter(
             usuario=user,
@@ -54,7 +56,6 @@ def mis_cursos_view(request):
         .select_related("curso")
     )
     cursos = [i.curso for i in inscripciones]
-
     return render(request, "cursos/mis_cursos.html", {"cursos": cursos})
 
 
@@ -84,22 +85,103 @@ class CursoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     success_url = reverse_lazy("cursos:lista")
 
     def test_func(self):
-        """Solo permiten crear cursos los docentes o admin."""
         user = self.request.user
-        # Ajusta según tu modelo de usuario
-        # Si tienes role = "teacher"/"admin":
-        return getattr(user, "role", None) in ("teacher", "admin")
-
-        # O si tienes métodos:
-        # return user.is_teacher() or user.is_admin_role()
+        return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
 
     def form_valid(self, form):
-        # Guardamos el curso
         response = super().form_valid(form)
-
-        # Agregar automáticamente al docente creador como docente del curso
         curso = self.object
         user = self.request.user
         curso.docentes.add(user)
-
         return response
+
+
+class CursoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Curso
+    form_class = CursoForm
+    template_name = "cursos/curso_form.html"
+    success_url = reverse_lazy("cursos:lista")
+
+    def test_func(self):
+        user = self.request.user
+        curso = self.get_object()
+        # si quieres exigir que sea docente del curso:
+        # es_docente = curso.docentes.filter(pk=user.pk).exists()
+        # return es_docente or user.is_superuser
+        return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
+
+
+    ##############################################################
+    ##############################################################
+    #MODULOS
+
+class ModuloCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Modulo
+    form_class = ModuloForm
+    template_name = "cursos/modulo_form.html"
+
+    def test_func(self):
+        user = self.request.user
+        return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
+
+    def form_valid(self, form):
+        curso = get_object_or_404(Curso, pk=self.kwargs["curso_pk"])
+        form.instance.curso = curso
+        messages.success(self.request, "Módulo creado correctamente.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("cursos:detalle", kwargs={"pk": self.object.curso.pk})
+
+
+class ModuloUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Modulo
+    form_class = ModuloForm
+    template_name = "cursos/modulo_form.html"
+
+    def test_func(self):
+        user = self.request.user
+        modulo = self.get_object()
+        curso = modulo.curso
+        return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
+
+    def get_success_url(self):
+        return reverse_lazy("cursos:detalle", kwargs={"pk": self.object.curso.pk})
+    
+
+
+
+    ##############################################################
+    ##############################################################
+    #CONTENIDOS
+
+class ContenidoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Contenido
+    form_class = ContenidoForm
+    template_name = "cursos/contenido_form.html"
+
+    def test_func(self):
+        user = self.request.user
+        return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
+
+    def form_valid(self, form):
+        modulo = get_object_or_404(Modulo, pk=self.kwargs["modulo_pk"])
+        form.instance.modulo = modulo
+        messages.success(self.request, "Contenido creado correctamente.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("cursos:detalle", kwargs={"pk": self.object.modulo.curso.pk})
+    
+class ContenidoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Contenido
+    form_class = ContenidoForm
+    template_name = "cursos/contenido_form.html"
+
+    def test_func(self):
+        user = self.request.user
+        # podrías chequear también si es docente del curso
+        return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
+
+    def get_success_url(self):
+        return reverse_lazy("cursos:detalle", kwargs={"pk": self.object.modulo.curso.pk})

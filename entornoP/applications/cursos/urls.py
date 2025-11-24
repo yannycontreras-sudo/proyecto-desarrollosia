@@ -8,11 +8,14 @@ from .views import (
     CursoUpdateView,
     ModuloCreateView,
     ModuloUpdateView,
+    ContenidoCreateView,
+    ContenidoUpdateView,
 )
 
 app_name = "cursos"
 
 urlpatterns = [
+    # cursos
     path("", CursoListView.as_view(), name="lista"),
     path("mis-cursos/", mis_cursos_view, name="mis_cursos"),
     path("crear/", CursoCreateView.as_view(), name="crear"),
@@ -23,4 +26,16 @@ urlpatterns = [
     # módulos
     path("<int:curso_pk>/modulos/crear/", ModuloCreateView.as_view(), name="modulo_crear"),
     path("modulos/<int:pk>/editar/", ModuloUpdateView.as_view(), name="modulo_editar"),
+
+    # contenidos
+    path(
+        "modulos/<int:modulo_pk>/contenidos/crear/",
+        ContenidoCreateView.as_view(),
+        name="contenido_crear",
+    ),
+    path(
+        "contenidos/<int:pk>/editar/",
+        ContenidoUpdateView.as_view(),
+        name="contenido_editar",
+    ),
 ]

@@ -23,7 +23,15 @@
                 </div>
                 <a href="#" class="nav-item nav-link">Contacto</a>
             </div>
-            <a href="#" class="btn btn-primary py-2 px-4 d-none d-lg-block">Iniciar Sesión</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'gestiondeusuarios:logout' %}" class="btn btn-primary py-2 px-4 d-none d-lg-block">
+                     Cerrar sesión
+                </a>
+            {% else %}
+                <a href="{% url 'gestiondeusuarios:login' %}" class="btn btn-primary py-2 px-4 d-none d-lg-block">
+                    Iniciar Sesión
+                </a>
+            {% endif %}
         </div>
     </nav>
 </div>

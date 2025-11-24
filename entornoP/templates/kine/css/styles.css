@@ -11241,3 +11241,28 @@ body {
   font-size: 0.75rem;
   border-radius: 0.375rem !important;
 }
+body {
+  background-color: #f5f5f5;
+}
+
+.card {
+  border: none;
+}
+
+.btn-primary {
+  background-color: #005F9E; /* un azul institucional parecido (ajusta según el logo) */
+  border-color: #005F9E;
+}
+
+.btn-primary:hover {
+  background-color: #004a7d;
+  border-color: #004a7d;
+}
+
+.form-control {
+  border-radius: 0.375rem;
+}
+
+.card-body img {
+  max-width: 100%;
+}

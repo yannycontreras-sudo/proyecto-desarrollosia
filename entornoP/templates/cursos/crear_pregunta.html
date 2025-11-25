@@ -1,0 +1,59 @@
+{% extends "home.html" %}
+
+{% block title %}Crear pregunta{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <h1 class="mb-4">Agregar pregunta al formulario {{ formulario.id }}</h1>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <h4>Pregunta</h4>
+                <div class="form-group mb-4">
+                    {{ pregunta_form.texto.label_tag }}
+                    {{ pregunta_form.texto }}
+                    {% if pregunta_form.texto.errors %}
+                        <div class="text-danger small">
+                            {{ pregunta_form.texto.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <h4>Opciones de respuesta</h4>
+                {{ formset.management_form }}
+
+                {% for form in formset %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+
+                            <div class="form-group mb-3">
+                                {{ form.texto.label_tag }}
+                                {{ form.texto }}
+                                {% if form.texto.errors %}
+                                    <div class="text-danger small">{{ form.texto.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-check">
+                                {{ form.es_correcta }}
+                                <label class="form-check-label">Es correcta</label>
+                            </div>
+
+                            {% for error in form.non_field_errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}

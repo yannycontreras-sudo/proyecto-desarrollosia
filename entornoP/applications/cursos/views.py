@@ -216,3 +216,150 @@ class ContenidoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy("cursos:detalle", kwargs={"pk": self.object.modulo.curso.pk})
+    
+class FormularioDetailView(LoginRequieredMixin, UserPassesTestMixin, DetailView):
+    model = Formulario
+    templete_name = "cursos/formulario_detalle.html"
+    context_object_name = "formulario"
+
+    def test_func(self):
+        user = self.request.user
+        return getattr(user, "role, None") in ("teacher" , "admin") or user.is_superuser
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        formulario = self.object
+
+        preguntas= (
+            Pregunta.objects
+            .filter(formulario=formulario)
+            .prefetch_related("opciones")
+            .order_by("orden")
+        )
+        context["preguntas"] = preguntas
+        return context
+    
+
+
+#preguntas
+from .models import Formulario, Pregunta, Evaluacion, OpcionRespuesta, RespuestaAlumnos
+from .forms import PreguntaForm, OpcionRespuestaFormSet, ResponderFormularioForm
+
+
+@login_required
+def crear_pregunta(request, formulario_id):
+    formulario = get_object_or_404(Formulario, id=formulario_id)
+
+    if hasattr(request.user, "is_teacher") and not request.user.is_teacher():
+        return HttpResponseForbidden ("No tienes permiso para crear preguntas.")
+    
+    pregunta = Pregunta(formulario=formulario)
+
+    if request.method == "POST":
+        pregunta_form = PreguntaForm(request.POST, instance=pregunta)
+        formset = OpcionRespuestaFormSet(request.POST, instance=pregunta)
+
+        if pregunta_form.is_valid() and formset.is_valid():
+            pregunta_form.save()
+
+            opciones = formset.save(commit=False)
+
+            tiene_correcta = any(o.es_correcta for o in opciones)
+            if not tiene_correcta:
+                formset,forms[0].add_error(
+                    "es correcta",
+                    "Debes marcar al menos una opcion correcta."
+                )
+            else:
+                for opcion in opciones:
+                    opcion.save()
+
+                messages.success(request, "Pregunta creada correctamente.")
+                return redirect("detalle_formulario" , formulario_id=formulario.id)
+    else:
+        pregunta_form = PreguntaForm(instance = pregunta)
+        formset = OpcionRespuestaFormSet(instance = pregunta)
+
+    return render(
+        request,
+        "cursis/crear_pregunta.html",
+        {
+            "formulario": formulario,
+            "pregunta_form": pregunta_form,
+            "formset": formset,
+        }
+    )
+
+#respuesta del alumnos al formulario
+
+@login_required
+
+def responder_formulario(request, formulario_id):
+    formulario = get_object_or_404(Formulario, id=formulario_id)
+    usuario = request.user
+    
+    if getattr(usuario, "role", None) != "student" and not usuario.is_superuser:
+        return HttpResponseForbidden("Solo los alumnos pueden responder este formulario.")
+    if Evaluacion.objects.filter(usuario=usuario, formulario=formulario).exists():
+        messages.info(request, "Ya has respondido este formulario.")
+        return redirect("cursos:detalle_formulario", pk=formulario.id)
+    preguntas = (
+        Pregunta.objects
+        .filter(formulario=formulario)
+        .prefetch_related("opciones")
+        .order_by("orden")
+    )
+
+    if not preguntas:
+        messages.info(request, "Este formulario aun no tiene preguntas configuradas.")
+        return redirect("cursos:detalle_formulario", pk=formulario.id)
+    if request.method == "POST":
+        form = ResponderFormularioForm(request.POST, preguntass=preguntas)
+        if form.is_valid():
+            #crear la evaluacion (intento del alumno)
+            evaluacion = Evaluacion.objects.create(
+                usuario=usuario,
+                formulario=formulario,
+            )
+            correctas = 0
+            total = preguntas.count()
+
+            for pregunta in preguntas:
+                field_name = f"preguntas_{pregunta.id}"
+                opcion_id = int(form.cleaned_data[field_name])
+                opcion = OpcionRespuesta.objects.get(
+                    id=opcion_id,
+                    pregunta=pregunta,
+                )
+                #guardar respuesta del alumno
+                RespuestaAlumno.objects.create(
+                    evaluacion=evaluacion,
+                    pregunta=pregunta,
+                    opcion=opcion,
+                )
+
+                if opcion.es_correcta:
+                    correctas += 1
+
+            #calcular puntaje (0-100%)
+            puntaje = (correctas / total)*100 if total > 0 else 0
+            evaluacion.puntaje = puntaje
+
+            #Regla de aprobacion: 60% o mas (se puede cambiar)
+            evaluacion.aprobado = puntaje >=60
+            evaluacion.save()
+
+            messages.success(
+                request,
+                f"Evaluacion enviada. Tu puntaje fue {puntaje:.2f}%.",
+            )
+            return redirect("cursos:detalle_formulario", pk=formulario.id)
+        else:
+            form = ResponderFormularioForm(preguntas=preguntas)
+        return render(
+            request,
+            "cursos/responder_formulario.html",
+            {
+                "formulario": formulario,
+                "form": form,
+            },
+        )

@@ -151,14 +151,6 @@
                                                                 </small>
                                                             {% endif %}
                                                         </div>
-
-                                                        {# BOTÓN EDITAR CONTENIDO SOLO DOCENTE/ADMIN #}
-                                                        {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
-                                                            <a href="{% url 'cursos:contenido_editar' contenido.pk %}"
-                                                               class="btn btn-sm btn-outline-secondary">
-                                                                Editar
-                                                            </a>
-                                                        {% endif %}
                                                     </div>
 
                                                 </li>
@@ -171,6 +163,64 @@
                                     {% else %}
                                         <p class="text-muted">Este módulo aún no tiene contenidos.</p>
                                     {% endif %}
+
+
+                                    {# ============================================
+                                       BOTONES DE FORMULARIO SEGÚN ROL Y FORMULARIO
+                                      ============================================ #}
+
+                                    {# Si el módulo tiene una simulación con formulario asociado #}
+                                    {% if modulo.simulacion and modulo.simulacion.formulario %}
+                                     {% with formulario=modulo.simulacion.formulario %}
+
+                                        {# BOTONES PARA DOCENTE / ADMIN: gestionar formulario #}
+                                        {% if user.is_authenticated and (user.role == "teacher" or user.role == "admin") %}
+                                          <div class="mt-3">
+                                                <a href="{% url 'cursos:detalle_formulario' formulario.pk %}"
+                                                   class="btn btn-outline-secondary btn-sm">
+                                                    Ver / editar formulario
+                                                </a>
+                                              {# Si quieres vista previa como alumno, puedes activar este otro botón:
+                                                <a href="{% url 'cursos:responder_formulario' formulario.pk %}"
+                                                   class="btn btn-outline-primary btn-sm ml-2">
+                                                      Vista previa como alumno
+                                                </a>
+                                                 #}
+                                           </div>
+                                    {% endif %}
+
+                                     {# BOTÓN PARA ALUMNO INSCRITO: responder evaluación #}
+                                       {% if user.is_authenticated and user.role == "student" and esta_inscrito %}
+                                           <div class="mt-3">
+                                                <a href="{% url 'cursos:responder_formulario' formulario.pk %}"
+                                                   class="btn btn-primary">
+                                                        Responder evaluación
+                                                </a>
+                                            </div>
+                                        {% endif %}
+
+                                     {% endwith %}
+                                  {% endif %}
+
+
+                                {% if user.is_authenticated and user.role == "student" and esta_inscrito %}
+                                {% if modulo.simulacion and modulo.simulacion.formulario %}
+                                     <a href="{% url 'cursos:responder_formulario' modulo.simulacion.formulario.id %}"
+                                          class="btn btn-primary mt-3">
+                                                 Responder evaluación
+                                     </a>
+                                 {% endif %}
+                            {% endif %}
+
+                                    {% if user.is_authenticated and user.role == "student" and esta_inscrito %}
+                                        {% if modulo.simulacion and modulo.simulacion.formulario %}
+                                            <a href="{% url 'cursos:responder_formulario' modulo.simulacion.formulario.id %}"
+                                                class="btn btn-primary mt-3">
+                                               Responder evaluación
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+
 
                                 </div>
                             </div>

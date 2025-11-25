@@ -45,6 +45,32 @@ class LoginForm(AuthenticationForm):
     username = forms.CharField(label="Usuario")
     password = forms.CharField(label="Contraseña", widget=forms.PasswordInput)
 
+    def confirm_login_allowed(self, user):
+        email = (user.email or "").strip().lower()
+
+        if not email:
+            raise ValidationError(
+                "Tu cuenta no tiene un correo asociado.",
+                code="no_email",
+            )
+        
+        try:
+            _, domain = email.split("@", 1)
+        except ValueError:
+            raise ValidationError(
+                "Correo electronico invalido.",
+                code="invalid_email",
+            )
+        
+        allowed_domains = ("ucn.cl", "alumnos.ucn.cl")
+
+        if domain not in allowed_domains:
+            raise ValidationError(
+                "Solo se permite iniciar sesión con correos institucionales"
+                "(@ucn.cl o @alumnos.ucn.cl).",
+                code="invalid_domains",
+            )
+
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):

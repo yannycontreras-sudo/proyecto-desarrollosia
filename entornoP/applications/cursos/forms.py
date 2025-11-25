@@ -18,3 +18,48 @@ class ContenidoForm(forms.ModelForm):
     class Meta:
         model = Contenido
         fields = ["titulo", "descripcion", "archivo"]
+
+
+from .models import Pregunta, OpcionRespuesta
+from django.forms import inlineformset_factory
+
+class PreguntaForm(forms.ModelForm):
+    class Meta:
+        model = Pregunta
+        fields = ["texto" , "orden"]
+
+class OpcionRespuestaForm(forms.ModelForm):
+    class Meta:
+        model = OpcionRespuesta
+        fields = ["texto" , "es_correcta"]
+
+OpcionRespuestaFormSet = inlineformset_factory(
+    Pregunta,
+    OpcionRespuesta,
+    form=OpcionRespuestaForm,
+    extra = 4,
+    can_delete = False
+)
+
+from .models import Pregunta, OpcionRespuesta
+from django import forms
+
+class ResponderFormularioForm(forms.Form):
+    def __int__(self, *args,**kwargs):
+        preguntas = kwargs.pop("preguntas")
+        super().__init__(*args, **kwargs)
+
+        for pregunta in preguntas:
+            field_name = f"pregunta_{pregunta.id}"
+            choices = [
+                (opcion.id, opcion.texto)
+                for opcion in pregunta.opciones.all()
+            ]
+            self.fields[field_name] = forms.ChoiceField(
+                label=pregunta.texto,
+                choices=choices,
+                widget=forms.RadioSelect,
+                required = True,
+            )
+
+

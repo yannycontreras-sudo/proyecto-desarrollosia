@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>{% block title %}EduSalud UCN{% endblock title %}</title>
@@ -13,7 +14,9 @@
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
 
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
@@ -62,15 +65,13 @@
     <!-- Navbar Start -->
     <div class="container-fluid p-0">
         <nav class="navbar navbar-expand-lg bg-white navbar-light py-3 py-lg-0 px-lg-5">
-             <a href="#" class="navbar-brand ml-lg-3">
-            <h1 class="m-0 text-uppercase text-white d-flex align-items-center">
-                <img src="{% static 'img/Escudo-UCN-Full-blanco_trans.png' %}" 
-                    alt="Escudo UCN" 
-                    style="height: 40px;" 
-                    class="me-2">
-                EduSalud UCN
-            </h1>
-        </a>
+            <a href="#" class="navbar-brand ml-lg-3">
+                <h1 class="m-0 text-uppercase text-white d-flex align-items-center">
+                    <img src="{% static 'img/Escudo-UCN-Full-blanco_trans.png' %}" alt="Escudo UCN"
+                        style="height: 40px;" class="me-2">
+                    EduSalud UCN
+                </h1>
+            </a>
             <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -81,13 +82,13 @@
 
                     {# Botón "Crear curso" solo para docentes o admin #}
                     {% if user.is_authenticated and user.role == 'teacher' %}
-                        <a href="{% url 'cursos:crear' %}" class="nav-item nav-link">
-                            Crear curso
-                        </a>
+                    <a href="{% url 'cursos:crear' %}" class="nav-item nav-link">
+                        Crear curso
+                    </a>
                     {% elif user.is_authenticated and user.role == 'admin' %}
-                        <a href="{% url 'cursos:crear' %}" class="nav-item nav-link">
-                            Crear curso
-                        </a>
+                    <a href="{% url 'cursos:crear' %}" class="nav-item nav-link">
+                        Crear curso
+                    </a>
                     {% endif %}
 
                     <div class="nav-item dropdown">
@@ -102,13 +103,14 @@
 
                 {# Botón derecha: Join Us o Cerrar sesión según login #}
                 {% if user.is_authenticated %}
-                    <a href="{% url 'gestiondeusuarios:logout' %}" class="btn btn-outline-primary py-2 px-4 d-none d-lg-block">
-                        Cerrar sesión
-                    </a>
+                <a href="{% url 'gestiondeusuarios:logout' %}"
+                    class="btn btn-outline-primary py-2 px-4 d-none d-lg-block">
+                    Cerrar sesión
+                </a>
                 {% else %}
-                    <a href="{% url 'gestiondeusuarios:registro' %}" class="btn btn-primary py-2 px-4 d-none d-lg-block">
-                        Join Us
-                    </a>
+                <a href="{% url 'gestiondeusuarios:registro' %}" class="btn btn-primary py-2 px-4 d-none d-lg-block">
+                    Ingresa aquí
+                </a>
                 {% endif %}
             </div>
         </nav>
@@ -127,14 +129,15 @@
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <button class="btn btn-outline-light bg-white text-body px-4 dropdown-toggle" type="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</button>
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</button>
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="#">Courses 1</a>
                             <a class="dropdown-item" href="#">Courses 2</a>
                             <a class="dropdown-item" href="#">Courses 3</a>
                         </div>
                     </div>
-                    <input type="text" class="form-control border-light" style="padding: 30px 25px;" placeholder="Keyword">
+                    <input type="text" class="form-control border-light" style="padding: 30px 25px;"
+                        placeholder="Keyword">
                     <div class="input-group-append">
                         <button class="btn btn-secondary px-4 px-lg-5">Search</button>
                     </div>
@@ -150,7 +153,8 @@
             <div class="row">
                 <div class="col-lg-5 mb-5 mb-lg-0" style="min-height: 500px;">
                     <div class="position-relative h-100">
-                        <img class="position-absolute w-100 h-100" src="{% static 'img/about.jpg' %}" style="object-fit: cover;">
+                        <img class="position-absolute w-100 h-100" src="{% static 'img/about.jpg' %}"
+                            style="object-fit: cover;">
                     </div>
                 </div>
                 <div class="col-lg-7">
@@ -167,7 +171,8 @@
                         <div class="col-3 px-0">
                             <div class="bg-success text-center p-4">
                                 <h1 class="text-white" data-toggle="counter-up">123</h1>
-                                <h6 class="text-uppercase text-white">Available<span class="d-block">Subjects</span></h6>
+                                <h6 class="text-uppercase text-white">Available<span class="d-block">Subjects</span>
+                                </h6>
                             </div>
                         </div>
                         <div class="col-3 px-0">
@@ -179,7 +184,8 @@
                         <div class="col-3 px-0">
                             <div class="bg-secondary text-center p-4">
                                 <h1 class="text-white" data-toggle="counter-up">123</h1>
-                                <h6 class="text-uppercase text-white">Skilled<span class="d-block">Instructors</span></h6>
+                                <h6 class="text-uppercase text-white">Skilled<span class="d-block">Instructors</span>
+                                </h6>
                             </div>
                         </div>
                         <div class="col-3 px-0">
@@ -205,7 +211,8 @@
             <!-- contenido de footer -->
         </div>
     </div>
-    <div class="container-fluid bg-dark text-white-50 border-top py-4" style="border-color: rgba(256, 256, 256, .1) !important;">
+    <div class="container-fluid bg-dark text-white-50 border-top py-4"
+        style="border-color: rgba(256, 256, 256, .1) !important;">
         <div class="container">
             <div class="row">
                 <div class="col-md-6 text-center text-md-left mb-3 mb-md-0">
@@ -241,4 +248,5 @@
     <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>
 </body>
+
 </html>

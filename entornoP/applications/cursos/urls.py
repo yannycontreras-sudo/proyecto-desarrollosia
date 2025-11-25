@@ -10,6 +10,8 @@ from .views import (
     ModuloUpdateView,
     ContenidoCreateView,
     ContenidoUpdateView,
+    crear_pregunta,
+    FormularioDetailView,
 )
 
 app_name = "cursos"
@@ -37,5 +39,19 @@ urlpatterns = [
         "contenidos/<int:pk>/editar/",
         ContenidoUpdateView.as_view(),
         name="contenido_editar",
+    ),
+
+    #formularios
+    path(
+        "formulario/<int:pk>/",
+        FormularioDetailView.as_view(),
+        name="detalle_formulario",
+    ),
+
+    #preguntas
+    path(
+        "formularios/<int:formulario_id>/preguntas/crear/",
+        crear_pregunta,
+        name = "crear_pregunta",
     ),
 ]

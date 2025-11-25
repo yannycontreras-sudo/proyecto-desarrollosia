@@ -18,3 +18,25 @@ class ContenidoForm(forms.ModelForm):
     class Meta:
         model = Contenido
         fields = ["titulo", "descripcion", "archivo"]
+
+
+from .models import Pregunta, OpcionRespuesta
+from django.forms import inlineformset_factory
+
+class PreguntaForm(forms.ModelForm):
+    class Meta:
+        model = Pregunta
+        fields = ["texto" , "orden"]
+
+class OpcionRespuestaForm(forms.ModelForm):
+    class Meta:
+        model = OpcionRespuesta
+        fields = ["texto" , "es_correcta"]
+
+OpcionRespuestaFormSet = inlineformset_factory(
+    Pregunta,
+    OpcionRespuesta,
+    form=OpcionRespuestaForm,
+    extra = 4,
+    can_delete = False
+)

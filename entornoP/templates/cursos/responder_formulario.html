@@ -1,0 +1,33 @@
+{% extends "home.html" %}
+
+{% block title %}Responder formulario{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <h1 class="mb-4">Responder formulario {{ formulario.id }}</h1>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="mb-4">
+                        <p><strong>{{ field.label }}</strong></p>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger small">
+                                {{ field.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-primary">Enviar respuestas</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}

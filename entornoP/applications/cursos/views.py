@@ -7,8 +7,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from .forms import (CursoForm, ModuloForm, ContenidoForm, PreguntaForm, OpcionRespuestaFormSet,ResponderFormularioForm,RecursoMultimediaForm,)
-from .models import (Curso,Inscripcion,Modulo,Contenido,Formulario,Pregunta,OpcionRespuesta,Evaluacion,RespuestaAlumno,RecursoMultimedia,)
+from .forms import (CursoForm, ModuloForm, ContenidoForm, PreguntaForm, OpcionRespuestaFormSet,ResponderFormularioForm,RecursoMultimediaForm)
+from .models import (Curso,Inscripcion,Modulo,Contenido,Formulario,Pregunta,OpcionRespuesta,Evaluacion,RespuestaAlumno,RecursoMultimedia)
 
 
 ##############################################################

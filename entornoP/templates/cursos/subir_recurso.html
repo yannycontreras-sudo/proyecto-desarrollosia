@@ -2,14 +2,24 @@
 {% block content %}
 <h2>Subir Recurso Multimedia</h2>
 
-<form id="upload-form" method="post" enctype="multipart/form-data">
+<form method="POST" enctype="multipart/form-data">
   {% csrf_token %}
-  {{ form.as_p }}
 
-  <div id="preview-container" style="display:none; border:1px solid #ddd; padding:12px; margin-top:12px;">
-    <h3>Vista previa</h3>
+  {# renderiza los demás campos del form (modulo, titulo, tipo, etc) #}
+  {{ form.modulo }}
+  {{ form.titulo }}
+  {{ form.tipo }}
+  <!-- Asegúrate de renderizar SOLO el campo archivo aquí -->
+  <label for="id_archivo">Archivo (imagen / video / documento):</label><br>
+  {{ form.archivo }}  <!-- esto es IMPORTANTÍSIMO: usa el input del form -->
+  <br><br>
 
-    <img id="preview-image" src="" alt="Vista previa imagen" style="max-width:480px; display:none; margin-bottom:8px;">
+  <!-- Contenedor de vista previa (inicialmente oculto) -->
+  <div id="preview-container" style="display:none; border:1px solid #ddd; padding:12px; border-radius:6px;">
+    <h4>Vista previa</h4>
+
+    <img id="preview-image" src="" alt="preview imagen" style="max-width:480px; display:none; margin-bottom:8px;">
+    
     <video id="preview-video" controls style="max-width:640px; display:none; margin-bottom:8px;">
       <source id="preview-video-source" src="">
       Tu navegador no soporta video.
@@ -29,9 +39,8 @@
     <button type="submit">Publicar</button>
   </div>
 
-  {% if form.non_field_errors %}
-    <div style="color:red;">{{ form.non_field_errors }}</div>
-  {% endif %}
+  {# errores del form #}
+  {{ form.non_field_errors }}
   {% for field in form %}
     {% for error in field.errors %}
       <div style="color:red;">{{ error }}</div>
@@ -39,40 +48,41 @@
   {% endfor %}
 </form>
 
+
 <script>
 (function(){
-  const fileInput = document.querySelector('input[type="file"]');
+  // buscar el input file generado por Django (id normalmente "id_archivo" si tu campo se llama 'archivo')
+  const fileInput = document.getElementById('id_archivo') || document.querySelector('input[type="file"][name$="archivo"]');
   if (!fileInput) return;
 
   const previewContainer = document.getElementById('preview-container');
-  const previewImage = document.getElementById('preview-image');
-  const previewVideo = document.getElementById('preview-video');
-  const previewVideoSource = document.getElementById('preview-video-source');
-  const previewDoc = document.getElementById('preview-doc');
-  const previewDocLink = document.getElementById('preview-doc-link');
-  const previewDocDownload = document.getElementById('preview-doc-download');
-  const previewPdfEmbed = document.getElementById('preview-pdf-embed');
-  const previewPdfIframe = document.getElementById('preview-pdf-iframe');
+  const imgEl = document.getElementById('preview-image');
+  const videoEl = document.getElementById('preview-video');
+  const videoSource = document.getElementById('preview-video-source');
+  const docEl = document.getElementById('preview-doc');
+  const docLink = document.getElementById('preview-doc-link');
+  const docDownload = document.getElementById('preview-doc-download');
+  const pdfEmbed = document.getElementById('preview-pdf-embed');
+  const pdfIframe = document.getElementById('preview-pdf-iframe');
   const removeBtn = document.getElementById('remove-file-btn');
 
   const imgExt = ['jpg','jpeg','png','gif','bmp','webp'];
   const vidExt = ['mp4','webm','ogg','mov'];
-  const docExt = ['pdf','doc','docx','xls','xlsx','ppt','pptx','txt'];
+  const MAX_MB = 50; // mantener consistente con settings
 
-  const MAX_MB = 50; // sincronizar con FILE_UPLOAD_MAX_MEMORY_SIZE en settings
-
-  function resetPreview() {
+  function resetPreview(){
     previewContainer.style.display = 'none';
-    previewImage.style.display = 'none'; previewImage.src = '';
-    previewVideo.style.display = 'none'; previewVideoSource.src = ''; previewVideo.load && previewVideo.load();
-    previewDoc.style.display = 'none'; previewDocLink.href = '#'; previewDocDownload.href = '#';
-    previewPdfEmbed.style.display = 'none'; previewPdfIframe.src = '';
+    imgEl.style.display = 'none'; imgEl.src = '';
+    videoEl.style.display = 'none'; videoSource.src = ''; try{ videoEl.load(); }catch(e){}
+    docEl.style.display = 'none'; docLink.href = '#'; docDownload.href = '#';
+    pdfEmbed.style.display = 'none'; pdfIframe.src = '';
   }
 
   fileInput.addEventListener('change', function(e){
     const f = e.target.files[0];
-    if (!f) { resetPreview(); return; }
+    if(!f){ resetPreview(); return; }
 
+    // tamaño en frontend (UX)
     if (f.size > MAX_MB * 1024 * 1024) {
       alert("El archivo supera el límite de " + MAX_MB + " MB.");
       fileInput.value = '';
@@ -80,32 +90,36 @@
       return;
     }
 
-    const name = f.name;
+    const name = f.name || '';
     const ext = name.split('.').pop().toLowerCase();
     const url = URL.createObjectURL(f);
 
+    // reset y mostrar contenedor
     resetPreview();
     previewContainer.style.display = 'block';
 
-    if (imgExt.includes(ext)) {
-      previewImage.src = url; previewImage.style.display = 'block';
+    if (imgExt.includes(ext) || f.type.startsWith('image/')) {
+      imgEl.src = url;
+      imgEl.style.display = 'block';
       return;
     }
 
-    if (vidExt.includes(ext)) {
-      previewVideoSource.src = url;
-      previewVideo.style.display = 'block';
-      previewVideo.load();
+    if (vidExt.includes(ext) || f.type.startsWith('video/')) {
+      videoSource.src = url;
+      videoEl.style.display = 'block';
+      try{ videoEl.load(); }catch(e){}
       return;
     }
 
-    previewDoc.style.display = 'block';
-    previewDocLink.href = url; previewDocDownload.href = url;
-    if (ext === 'pdf') {
-      previewPdfEmbed.style.display = 'block';
-      previewPdfIframe.src = url;
+    // documento: enlazar y si pdf embeber
+    docEl.style.display = 'block';
+    docLink.href = url;
+    docDownload.href = url;
+    if (ext === 'pdf' || f.type === 'application/pdf') {
+      pdfEmbed.style.display = 'block';
+      pdfIframe.src = url;
     } else {
-      previewPdfEmbed.style.display = 'none';
+      pdfEmbed.style.display = 'none';
     }
   });
 
@@ -113,6 +127,8 @@
     fileInput.value = '';
     resetPreview();
   });
+
 })();
 </script>
+
 {% endblock %}

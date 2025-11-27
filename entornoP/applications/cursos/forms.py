@@ -2,7 +2,8 @@ from django import forms
 from django.conf import settings
 from django.forms import inlineformset_factory
 import os
-from .models import (Curso,Modulo,Contenido, Pregunta,OpcionRespuesta,RecursoMultimedia,)
+
+from .models import (Curso,Modulo,Contenido, Pregunta,OpcionRespuesta,RecursoMultimedia,Recurso,)
 
 class CursoForm(forms.ModelForm):
     class Meta:
@@ -66,13 +67,13 @@ class RecursoMultimediaForm(forms.ModelForm):
         fields = ["modulo", "titulo", "tipo", "archivo"]
 
     def clean_archivo(self):
-        f = self.cleaned_data.get("archivo")
-        if not f:
+        archivo = self.cleaned_data.get("archivo")
+        if not archivo:
             raise forms.ValidationError("Seleccione un archivo.")
 
         # Validar tamaño (usa settings o 50MB por defecto)
         max_bytes = getattr(settings, "FILE_UPLOAD_MAX_MEMORY_SIZE", 50 * 1024 * 1024)
-        if f.size > max_bytes:
+        if archivo.size > max_bytes:
             mb = max_bytes // (1024 * 1024)
             raise forms.ValidationError(f"Archivo demasiado grande. Máximo permitido: {mb} MB.")
 
@@ -88,4 +89,11 @@ class RecursoMultimediaForm(forms.ModelForm):
         if ext not in extensiones_validas:
             raise forms.ValidationError("Tipo de archivo no permitido.")
 
-        return f
+        return archivo
+    
+# Recurso
+class RecursoForm(forms.ModelForm):
+    class Meta:
+        model = Recurso
+        fields = ["archivo", "titulo", "descripcion", "modulo"]
+

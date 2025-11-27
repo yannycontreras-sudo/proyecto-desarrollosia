@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
 import mimetypes
+import os 
 
 User = get_user_model()
 
@@ -262,3 +263,16 @@ class RecursoMultimedia(models.Model):
 
     def __str__(self):
         return f"{self.titulo} ({self.tipo})"
+
+class Recurso(models.Model):
+    titulo = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True)
+    archivo = models.FileField(upload_to="contenidos/")
+    modulo = models.ForeignKey(
+        Modulo,
+        on_delete=models.CASCADE,
+        related_name="recursos_simples"
+    )
+
+    def __str__(self):
+        return self.titulo

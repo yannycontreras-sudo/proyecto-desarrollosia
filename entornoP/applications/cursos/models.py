@@ -1,8 +1,10 @@
 # applications/cursos/models.py
 from django.conf import settings
 from django.db import models
+from django.contrib.auth import get_user_model
+import mimetypes
 
-User = settings.AUTH_USER_MODEL
+User = get_user_model()
 
 
 class Curso(models.Model):
@@ -232,3 +234,31 @@ class RespuestaAlumno(models.Model):
 
     def __str__(self):
         return f"{self.evaluacion} - {self.pregunta_id}"
+    
+def recurso_upload_to(instance, filename):
+    modulo_id = instance.modulo.id if instance.modulo and instance.modulo.id else 'sin_modulo'
+    return f"recursos/modulo_{modulo_id}/{filename}"
+
+
+class RecursoMultimedia(models.Model):
+    TIPO_CHOICES = (
+        ('imagen', 'Imagen'),
+        ('video', 'Video'),
+        ('documento', 'Documento'),
+    )
+
+    modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name='recursos')
+    titulo = models.CharField(max_length=255)
+    archivo = models.FileField(upload_to=recurso_upload_to)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    tipo_mime = models.CharField(max_length=150, blank=True)
+    creador = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.archivo and not self.tipo_mime:
+            self.tipo_mime = mimetypes.guess_type(self.archivo.name)[0] or ''
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.titulo} ({self.tipo})"

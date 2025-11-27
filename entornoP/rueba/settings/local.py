@@ -1,4 +1,5 @@
 from .base import *
+from pathlib import Path
 import os
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -29,8 +30,9 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # 🔹 Agrega esta línea:
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 
 JAZZMIN_SETTINGS = {
@@ -42,6 +44,10 @@ JAZZMIN_SETTINGS = {
     "custom_css": "css/admin_custom.css",
     "custom_js": None, 
     "icons": {
-    "auth.User": "fas fa-user",
-    "auth.Group": "fas fa-users",
-    },}
+        "auth.User": "fas fa-user",
+        "auth.Group": "fas fa-users",
+    },
+}
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024   # 50 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024   # 50 MB

@@ -8,10 +8,13 @@ from .views import (
     CursoUpdateView,
     ModuloCreateView,
     ModuloUpdateView,
+    modulo_toggle_publicacion_view,
     ContenidoCreateView,
     ContenidoUpdateView,
-    modulo_toggle_publicacion_view, 
+    subir_recurso,
+    ver_modulo,
 )
+from . import views
 
 app_name = "cursos"
 
@@ -40,4 +43,7 @@ urlpatterns = [
         ContenidoUpdateView.as_view(),
         name="contenido_editar",
     ),
+    # Subida de Archivos
+    path("subir-recurso/", subir_recurso, name="subir_recurso"),
+    path("modulo/<int:modulo_id>/", ver_modulo, name="ver_modulo"),
 ]

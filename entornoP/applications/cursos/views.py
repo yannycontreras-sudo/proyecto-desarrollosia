@@ -1,15 +1,15 @@
-from .forms import PreguntaForm, OpcionRespuestaFormSet, ResponderFormularioForm
-from .models import Formulario, Pregunta, Evaluacion, OpcionRespuesta, RespuestaAlumno
+from django import forms
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from .forms import (CursoForm, ModuloForm, ContenidoForm, PreguntaForm, OpcionRespuestaFormSet,ResponderFormularioForm,RecursoMultimediaForm,)
+from .models import (Curso,Inscripcion,Modulo,Contenido,Formulario,Pregunta,OpcionRespuesta,Evaluacion,RespuestaAlumno,RecursoMultimedia,)
 
-from .models import Curso, Inscripcion, Modulo, Contenido
-from .forms import CursoForm, ModuloForm, ContenidoForm
 
 ##############################################################
 ##############################################################
@@ -226,6 +226,9 @@ class ContenidoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return reverse_lazy("cursos:detalle", kwargs={"pk": self.object.modulo.curso.pk})
 
 
+# ============================================================
+# FORMULARIO DETALLE
+
 class FormularioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Formulario
     templete_name = "cursos/formulario_detalle.html"
@@ -249,8 +252,8 @@ class FormularioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         return context
 
 
-# preguntas
-
+# ============================================================
+# CREAR PREGUNTA
 
 @login_required
 def crear_pregunta(request, formulario_id):
@@ -296,8 +299,8 @@ def crear_pregunta(request, formulario_id):
         }
     )
 
-# respuesta del alumnos al formulario
-
+# ============================================================
+# RESPONDER FORMULARIO
 
 @login_required
 def responder_formulario(request, formulario_id):
@@ -371,3 +374,50 @@ def responder_formulario(request, formulario_id):
                 "form": form,
             },
         )
+
+# ============================================================
+# SUBIR RECURSO MULTIMEDIA
+@login_required
+def subir_recurso(request):
+    if request.method == "POST":
+        form = RecursoMultimediaForm(request.POST, request.FILES)
+        if form.is_valid():
+            recurso = form.save(commit=False)
+            recurso.creador = request.user
+            recurso.save()
+
+            messages.success(request, "Recurso subido correctamente.")
+            return redirect("cursos:ver_modulo", modulo_id=recurso.modulo.id)
+    else:
+        initial = {}
+        mid = request.GET.get("modulo")
+        if mid:
+            try:
+                initial["modulo"] = get_object_or_404(Modulo, id=mid)
+            except:
+                pass
+
+        form = RecursoMultimediaForm(initial=initial)
+
+    return render(request, "cursos/subir_recurso.html", {"form": form})
+
+
+# ============================================================
+# VER MÓDULO
+# ============================================================
+
+def ver_modulo(request, modulo_id):
+    modulo = get_object_or_404(Modulo, id=modulo_id)
+    recursos = modulo.recursos.all().order_by("-fecha_subida")
+
+    # asegurar MIME
+    for r in recursos:
+        if not r.tipo_mime:
+            import mimetypes
+            r.tipo_mime = mimetypes.guess_type(r.archivo.url)[0] or ""
+
+    return render(
+        request,
+        "cursos/ver_modulo.html",
+        {"modulo": modulo, "recursos": recursos},
+    )

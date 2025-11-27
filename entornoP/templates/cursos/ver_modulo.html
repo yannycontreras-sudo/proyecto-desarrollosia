@@ -1,0 +1,35 @@
+{% extends "Base.html" %}
+{% block content %}
+<h1>{{ modulo.titulo }}</h1>
+<p>{{ modulo.descripcion }}</p>
+
+<h3>Recursos</h3>
+{% if recursos %}
+  <ul style="list-style:none; padding:0;">
+  {% for r in recursos %}
+    <li style="margin-bottom:18px; padding:8px; border:1px solid #eee;">
+      <strong>{{ r.titulo }}</strong> — {{ r.get_tipo_display }}
+      <div style="margin-top:8px;">
+        {% if r.tipo == 'imagen' %}
+          <img src="{{ r.archivo.url }}" alt="{{ r.titulo }}" style="max-width:480px;">
+        {% elif r.tipo == 'video' %}
+          <video controls style="max-width:640px;">
+            <source src="{{ r.archivo.url }}" type="{{ r.tipo_mime|default:'video/mp4' }}">
+            Tu navegador no soporta video.
+          </video>
+        {% else %}
+          <p><a href="{{ r.archivo.url }}" target="_blank">Abrir documento</a> | <a href="{{ r.archivo.url }}" download>Descargar</a></p>
+          {% if r.archivo.url|lower endswith:".pdf" %}
+            <iframe src="{{ r.archivo.url }}" style="width:100%; height:600px; border:1px solid #ccc;"></iframe>
+          {% endif %}
+        {% endif %}
+      </div>
+      <small style="color:#666;">Subido: {{ r.fecha_subida|date:"d/m/Y H:i" }}</small>
+    </li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <p>No hay recursos asociados.</p>
+{% endif %}
+<p><a href="{% url 'curso:subir_recurso' %}?modulo={{ modulo.id }}">Agregar recurso a este módulo</a></p>
+{% endblock %}

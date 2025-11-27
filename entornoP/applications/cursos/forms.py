@@ -1,6 +1,8 @@
 from django import forms
-from .models import Curso, Modulo, Contenido
-
+from django.conf import settings
+from django.forms import inlineformset_factory
+import os
+from .models import (Curso,Modulo,Contenido, Pregunta,OpcionRespuesta,RecursoMultimedia,)
 
 class CursoForm(forms.ModelForm):
     class Meta:
@@ -19,10 +21,7 @@ class ContenidoForm(forms.ModelForm):
         model = Contenido
         fields = ["titulo", "descripcion", "archivo"]
 
-
-from .models import Pregunta, OpcionRespuesta
-from django.forms import inlineformset_factory
-
+#Preguntas y opciones de respuesta
 class PreguntaForm(forms.ModelForm):
     class Meta:
         model = Pregunta
@@ -41,9 +40,7 @@ OpcionRespuestaFormSet = inlineformset_factory(
     can_delete = False
 )
 
-from .models import Pregunta, OpcionRespuesta
-from django import forms
-
+# Formulario para que el alumno responda preguntas
 class ResponderFormularioForm(forms.Form):
     def __int__(self, *args,**kwargs):
         preguntas = kwargs.pop("preguntas")
@@ -62,4 +59,33 @@ class ResponderFormularioForm(forms.Form):
                 required = True,
             )
 
+# Formulario para subir recursos multimedia
+class RecursoMultimediaForm(forms.ModelForm):
+    class Meta:
+        model = RecursoMultimedia
+        fields = ["modulo", "titulo", "tipo", "archivo"]
 
+    def clean_archivo(self):
+        f = self.cleaned_data.get("archivo")
+        if not f:
+            raise forms.ValidationError("Seleccione un archivo.")
+
+        # Validar tamaño (usa settings o 50MB por defecto)
+        max_bytes = getattr(settings, "FILE_UPLOAD_MAX_MEMORY_SIZE", 50 * 1024 * 1024)
+        if f.size > max_bytes:
+            mb = max_bytes // (1024 * 1024)
+            raise forms.ValidationError(f"Archivo demasiado grande. Máximo permitido: {mb} MB.")
+
+        # Validar extensión
+        extensiones_validas = [
+            ".jpg", ".jpeg", ".png", ".gif", ".webp",
+            ".mp4", ".webm", ".ogg", ".mov",
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx",
+            ".ppt", ".pptx", ".txt",
+        ]
+
+        ext = os.path.splitext(f.name)[1].lower()
+        if ext not in extensiones_validas:
+            raise forms.ValidationError("Tipo de archivo no permitido.")
+
+        return f

@@ -1,0 +1,17 @@
+<h2>Mi Progreso Académico</h2>
+
+{% for item in progreso_data %}
+    <div class="card">
+        <h3>{{ item.curso.nombre }}</h3>
+
+        <p>Módulos completados: {{ item.completados }} / {{ item.total_modulos }}</p>
+
+        <div class="barra">
+            <div class="avance" style="width: {{ item.porcentaje }}%;"></div>
+        </div>
+
+        <p><strong>{{ item.porcentaje }}%</strong> completado</p>
+    </div>
+{% empty %}
+    <p>No estás inscrito en cursos.</p>
+{% endfor %}

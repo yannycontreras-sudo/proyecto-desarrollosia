@@ -33,6 +33,8 @@ urlpatterns = [
     path("cursos/", include("applications.cursos.urls")),
 
     path("core/", include('applications.core.urls')),
+
+
     
 
     

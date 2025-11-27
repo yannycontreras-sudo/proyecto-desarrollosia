@@ -3,7 +3,7 @@ from django.conf import settings
 from django.forms import inlineformset_factory
 import os
 
-from .models import (Curso,Modulo,Contenido, Pregunta,OpcionRespuesta,RecursoMultimedia,Recurso,)
+from .models import (Curso,Modulo,Contenido, Pregunta,OpcionRespuesta,RecursoMultimedia)
 
 class CursoForm(forms.ModelForm):
     class Meta:
@@ -90,10 +90,8 @@ class RecursoMultimediaForm(forms.ModelForm):
             raise forms.ValidationError("Tipo de archivo no permitido.")
 
         return archivo
-    
-# Recurso
-class RecursoForm(forms.ModelForm):
-    class Meta:
-        model = Recurso
-        fields = ["archivo", "titulo", "descripcion", "modulo"]
 
+class SubirRecursoForm(forms.ModelForm):
+    class Meta:
+        model = RecursoMultimedia
+        fields = ['modulo', 'titulo', 'tipo', 'archivo']

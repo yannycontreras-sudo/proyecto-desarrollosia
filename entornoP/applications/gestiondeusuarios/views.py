@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages   
 
 from .forms import RegistroForm, LoginForm
+from cursos.models import Curso, Modulo, ProgresoModulo
+
 
 
 def registro_view(request):
@@ -36,7 +38,41 @@ def login_view(request):
 
     return render(request, "gestiondeusuarios/login.html", {"form": form})
 
+
+
 def logout_view(request):
     logout(request)
     messages.success(request, "Has cerrado sesión correctamente.")
     return redirect("gestiondeusuarios:login")
+
+
+
+@login_required
+def ver_progreso(request):
+    user = request.user
+
+    cursos = Curso.objects.all()
+    progreso_data = []
+
+    for curso in cursos:
+        modulos = Modulo.objects.filter(curso=curso)
+        total_modulos = modulos.count()
+
+        completados = ProgresoModulo.objects.filter(
+            user=user, modulo__in=modulos, completado=True
+        ).count()
+
+        porcentaje = 0
+        if total_modulos > 0:
+            porcentaje = int((completados / total_modulos) * 100)
+
+        progreso_data.append({
+            "curso": curso,
+            "total_modulos": total_modulos,
+            "completados": completados,
+            "porcentaje": porcentaje
+        })
+
+    return render(request, "gestiondeusuarios/progreso.html", {
+        "progreso_data": progreso_data
+    })

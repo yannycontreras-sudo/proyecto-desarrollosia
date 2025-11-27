@@ -1,0 +1,8 @@
+<h2>Recursos del módulo: {{ modulo.nombre }}</h2>
+<ul>
+    {% for recurso in recursos %}
+        <li>{{ recurso.titulo }} ({{ recurso.tipo }}) - <a href="{{ recurso.archivo.url }}">Ver archivo</a></li>
+    {% empty %}
+        <li>No hay recursos aún.</li>
+    {% endfor %}
+</ul>

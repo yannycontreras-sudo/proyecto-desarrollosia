@@ -46,4 +46,5 @@ urlpatterns = [
     # Subida de Archivos
     path("subir-recurso/", subir_recurso, name="subir_recurso"),
     path("modulo/<int:modulo_id>/", ver_modulo, name="ver_modulo"),
+    path('modulo/<int:modulo_id>/recursos/', views.listar_recursos_modulo, name='listar_recursos_modulo'),
 ]

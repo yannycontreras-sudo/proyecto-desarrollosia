@@ -264,3 +264,14 @@ class RecursoMultimedia(models.Model):
     def __str__(self):
         return f"{self.titulo} ({self.tipo})"
 
+class ProgresoModulo(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE)
+    completado = models.BooleanField(default=False)
+    fecha_completado = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('user', 'modulo')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.modulo.nombre} ({'✔' if self.completado else 'Pendiente'})"

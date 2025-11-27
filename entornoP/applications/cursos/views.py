@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from .forms import (CursoForm, ModuloForm, ContenidoForm, PreguntaForm, OpcionRespuestaFormSet,ResponderFormularioForm,RecursoMultimediaForm)
+from .forms import (CursoForm, ModuloForm, ContenidoForm, PreguntaForm, OpcionRespuestaFormSet,ResponderFormularioForm,RecursoMultimediaForm, SubirRecursoForm)
 from .models import (Curso,Inscripcion,Modulo,Contenido,Formulario,Pregunta,OpcionRespuesta,Evaluacion,RespuestaAlumno,RecursoMultimedia)
 
 
@@ -401,6 +401,17 @@ def subir_recurso(request):
 
     return render(request, "cursos/subir_recurso.html", {"form": form})
 
+def subir_recurso(request):
+    if request.method == 'POST':
+        form = SubirRecursoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Recurso multimedia subido correctamente.')
+            return redirect('listar_recursos')
+    else:
+        form = SubirRecursoForm()
+    return render(request, 'subir_recurso.html', {'form': form})
+
 
 # ============================================================
 # VER MÓDULO
@@ -421,3 +432,12 @@ def ver_modulo(request, modulo_id):
         "cursos/ver_modulo.html",
         {"modulo": modulo, "recursos": recursos},
     )
+
+
+def listar_recursos_modulo(request, modulo_id):
+    modulo = Modulo.objects.get(id=modulo_id)
+    recursos = modulo.recursos.all()  # gracias a related_name
+    return render(request, 'listar_recursos_modulo.html', {'modulo': modulo, 'recursos': recursos})
+
+def marcar_completado(request, modulo_id):
+    ...

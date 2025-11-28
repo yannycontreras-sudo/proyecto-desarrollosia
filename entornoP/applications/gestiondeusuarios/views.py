@@ -5,8 +5,14 @@ from django.contrib import messages
 
 from .forms import RegistroForm, LoginForm
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
 from applications.cursos.models import Curso, Modulo, ProgresoModulo
+=======
+from applications.cursos.models import Curso, Modulo, ProgresoModulo
+
+
+>>>>>>> Stashed changes
 
 
 

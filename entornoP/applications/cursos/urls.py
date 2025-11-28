@@ -12,6 +12,7 @@ from .views import (
     ContenidoCreateView,
     ContenidoUpdateView,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     modulo_toggle_publicacion_view,
 <<<<<<< HEAD
     FormularioDetailView,
@@ -23,6 +24,14 @@ from .views import (
     ActualizarProgresoModulo,
 )
 
+=======
+    FormularioDetailView,
+    editar_preguntas_formulario,
+    crear_pregunta,
+    #editar_pregunta,
+    responder_formulario_view,
+)
+>>>>>>> Stashed changes
 =======
     FormularioDetailView,
     editar_preguntas_formulario,
@@ -45,6 +54,7 @@ urlpatterns = [
 
     # módulos
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     path("<int:curso_pk>/modulos/crear/",
          ModuloCreateView.as_view(), name="modulo_crear"),
     path("modulos/<int:pk>/editar/",
@@ -52,6 +62,8 @@ urlpatterns = [
     path("modulos/<int:pk>/toggle-publicacion/",
          modulo_toggle_publicacion_view, name="modulo_toggle_publicacion"),
 =======
+=======
+>>>>>>> Stashed changes
     path(
         "<int:curso_pk>/modulos/crear/",
         ModuloCreateView.as_view(),
@@ -62,6 +74,9 @@ urlpatterns = [
         ModuloUpdateView.as_view(),
         name="modulo_editar",
     ),
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
     # contenidos
@@ -76,7 +91,12 @@ urlpatterns = [
         name="contenido_editar",
     ),
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         # formularios
+=======
+
+    # formularios (docente)
+>>>>>>> Stashed changes
 =======
 
     # formularios (docente)
@@ -93,6 +113,7 @@ urlpatterns = [
     ),
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     path(
         "pregunta/<int:pregunta_id>/editar/",
         editar_pregunta,
@@ -103,6 +124,8 @@ urlpatterns = [
          ActualizarProgresoModulo.as_view(), name="actualizar_progreso"),
 
 =======
+=======
+>>>>>>> Stashed changes
     # responder formulario (alumno)
     path(
         "formularios/<int:formulario_id>/responder/",
@@ -121,5 +144,8 @@ urlpatterns = [
      #   editar_pregunta,
      #   name="editar_pregunta",
    # ),
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 ]

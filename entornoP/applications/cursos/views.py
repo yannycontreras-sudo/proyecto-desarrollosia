@@ -277,10 +277,13 @@ class FormularioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         context["preguntas"] = preguntas
         return context
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 from django.http import HttpResponseForbidden
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 =======
+=======
+>>>>>>> Stashed changes
     
 
 # ======================================
@@ -360,6 +363,11 @@ def editar_preguntas_formulario(request, formulario_id):
         "cursos/editar_preguntas_formulario.html",
         {"formulario": formulario, "formset": formset},
     )
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 
 
 >>>>>>> Stashed changes

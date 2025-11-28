@@ -11,10 +11,14 @@ from .views import (
     ContenidoCreateView,
     ContenidoUpdateView,
     modulo_toggle_publicacion_view,
+<<<<<<< HEAD
     FormularioDetailView,
     editar_preguntas_formulario,
+=======
+>>>>>>> 266ffda57c5b6b47dfa36c4868d549fbeb9be11b
     crear_pregunta,
     editar_pregunta,
+    ActualizarProgresoModulo,
 )
 
 
@@ -30,9 +34,12 @@ urlpatterns = [
     path("<int:pk>/inscribirse/", inscribirse_curso_view, name="inscribirse"),
 
     # módulos
-    path("<int:curso_pk>/modulos/crear/", ModuloCreateView.as_view(), name="modulo_crear"),
-    path("modulos/<int:pk>/editar/", ModuloUpdateView.as_view(), name="modulo_editar"),
-    path("modulos/<int:pk>/toggle-publicacion/", modulo_toggle_publicacion_view, name="modulo_toggle_publicacion"),
+    path("<int:curso_pk>/modulos/crear/",
+         ModuloCreateView.as_view(), name="modulo_crear"),
+    path("modulos/<int:pk>/editar/",
+         ModuloUpdateView.as_view(), name="modulo_editar"),
+    path("modulos/<int:pk>/toggle-publicacion/",
+         modulo_toggle_publicacion_view, name="modulo_toggle_publicacion"),
 
     # contenidos
     path(
@@ -62,4 +69,8 @@ urlpatterns = [
         editar_pregunta,
         name="editar_pregunta",
     )
+
+    path("modulos/<int:modulo_id>/progreso/",
+         ActualizarProgresoModulo.as_view(), name="actualizar_progreso"),
+
 ]

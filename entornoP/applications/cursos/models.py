@@ -43,7 +43,8 @@ class Inscripcion(models.Model):
 
 
 class Modulo(models.Model):
-    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name="modulos")
+    curso = models.ForeignKey(
+        Curso, on_delete=models.CASCADE, related_name="modulos")
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True)
     orden = models.PositiveIntegerField(default=1)
@@ -70,7 +71,8 @@ class Simulacion(models.Model):
 
 
 class Contenido(models.Model):
-    modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name="contenidos")
+    modulo = models.ForeignKey(
+        Modulo, on_delete=models.CASCADE, related_name="contenidos")
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True)
 
@@ -195,8 +197,8 @@ class Pregunta(models.Model):
 
     tipo = models.CharField(
         max_length=20,
-        choices = TIPO_CHOICES,
-        default = TIPO_SELECCION,
+        choices=TIPO_CHOICES,
+        default=TIPO_SELECCION,
     )
 
     # opcional: tipo de pregunta
@@ -241,13 +243,62 @@ class RespuestaAlumno(models.Model):
     opcion = models.ForeignKey(
         OpcionRespuesta,
         on_delete=models.CASCADE,
-        null = True,
-        blank = True,
-        )
-    respuesta_texto = models.TextField(null = True, blank = True)
+        null=True,
+        blank=True,
+    )
+    respuesta_texto = models.TextField(null=True, blank=True)
 
     class Meta:
         unique_together = ("evaluacion", "pregunta")
 
     def __str__(self):
         return f"{self.evaluacion} - {self.pregunta_id}"
+
+
+class ProgresoModulo(models.Model):
+    """
+    Registra el estado del estudiante dentro de cada módulo.
+    El estado se cambia AUTOMÁTICAMENTE cuando cumple los requisitos.
+    """
+
+    ESTADOS = [
+        ("pendiente", "Pendiente"),
+        ("en_progreso", "En progreso"),
+        ("completado", "Completado"),
+    ]
+
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="progresos_modulos",
+        limit_choices_to={"role": "student"},
+    )
+
+    modulo = models.ForeignKey(
+        Modulo,
+        on_delete=models.CASCADE,
+        related_name="progresos",
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default="pendiente",
+    )
+
+    progreso = models.PositiveIntegerField(default=0)  # porcentaje (0–100)
+
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("usuario", "modulo")
+
+    def save(self, *args, **kwargs):
+        # 🔥 REGLA AUTOMÁTICA: si llega a 100%, se marca COMO COMPLETADO
+        if self.progreso >= 100:
+            self.estado = "completado"
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.usuario} - {self.modulo} ({self.estado})"

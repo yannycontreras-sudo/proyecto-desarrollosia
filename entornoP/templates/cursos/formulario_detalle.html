@@ -29,6 +29,11 @@
                     {% for pregunta in preguntas %}
                         <li class="list-group-item mb-3">
                             <h5 class="mb-3">{{ pregunta.texto }}</h5>
+                            <div class=""mt-2>
+                                <a href="{% url 'cursos:editar_pregunta' pregunta.id %}"  class="btn-warming btn-sm">
+                                    Editar pregunta
+                                </a>
+                            </div>
 
                             <ul class="list-group">
                                 {% for opcion in pregunta.opciones.all %}

@@ -1,0 +1,40 @@
+{% extends "home.html" %}
+
+{% block title %}Editar pregunta{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <h1 class="mb-4">Editar pregunta</h1>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <h4>Pregunta</h4>
+                {{ pregunta_form.as_p }}
+
+                {% if formset %}
+                    <h4>Opciones de respuesta</h4>
+                    {{ formset.management_form }}
+                    {% for form in formset %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                {{ form.as_p }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">
+                        Esta es una pregunta abierta, no tiene opciones de selección.
+                    </p>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}

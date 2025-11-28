@@ -11,6 +11,8 @@ from .views import (
     ContenidoCreateView,
     ContenidoUpdateView,
     modulo_toggle_publicacion_view, 
+    crear_pregunta,
+    editar_pregunta,
 )
 
 app_name = "cursos"
@@ -40,4 +42,9 @@ urlpatterns = [
         ContenidoUpdateView.as_view(),
         name="contenido_editar",
     ),
+    path(
+        "pregunta/<int:pregunta_id>/editar/",
+        editar_pregunta,
+        name="editar_pregunta",
+    )
 ]

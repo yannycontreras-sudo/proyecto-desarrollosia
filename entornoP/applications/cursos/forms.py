@@ -26,7 +26,7 @@ from django.forms import inlineformset_factory
 class PreguntaForm(forms.ModelForm):
     class Meta:
         model = Pregunta
-        fields = ["texto" , "orden"]
+        fields = ["texto" , "orden", "tipo"]
 
 class OpcionRespuestaForm(forms.ModelForm):
     class Meta:
@@ -45,13 +45,26 @@ from .models import Pregunta, OpcionRespuesta
 from django import forms
 
 class ResponderFormularioForm(forms.Form):
+    """
+    Crea dinamicamente un campo por cada pregunta del formulario.
+    - Si la pregunta es de seleccion multiple --> ChoiceField con radios.
+    -Si la prefunta es abierta --> CharField con Textarea
+    """
     def __int__(self, *args,**kwargs):
         preguntas = kwargs.pop("preguntas")
         super().__init__(*args, **kwargs)
 
         for pregunta in preguntas:
             field_name = f"pregunta_{pregunta.id}"
-            choices = [
+
+            if pregunta.tipo == Pregunta.TIPO_ABIERTA:
+                self.fields[field_name] = forms.CharField(
+                    label = pregunta.texto,
+                    widget = forms.Textarea(attrs={"rows": 3}),
+                    required = False,
+                )
+            else:
+                choices = [
                 (opcion.id, opcion.texto)
                 for opcion in pregunta.opciones.all()
             ]

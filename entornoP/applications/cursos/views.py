@@ -296,7 +296,43 @@ def crear_pregunta(request, formulario_id):
         }
     )
 
-# respuesta del alumnos al formulario
+@login_required 
+def editar_pregunta(request, pregunta_id):
+    pregunta = get_object_or_404(Pregunta, id = pregunta_id)
+    formulario = pregunta.formulario
+    if hasattr(request.user, "is_teacher") and not request.user.is_teacher() and getattr(reguest.user, "role, None") != "admin":
+        return HttpResponseForbidden("No tienes permiso para editar esta pregunta.")
+    if request.method == "POST":
+        pregunta_form = PreguntaForm(request.POST, instance=pregunta)
+        formset = None
+        if pregunta.tipo == Pregunta.TIPO_SELECCION:
+            formset = OpcionRespuestaFormSet(request.POST, instance = pregunta)
+        if pregunta_form.is_valid() and (formset is None or formset.is_valid()):
+            pregunta_form.save()
+            if formset is  not None:
+                opciones = formset.save(commit = False)
+                for opcion in opciones:
+                    opcion.pregunta = pregunta
+                    opcion.save()
+            messages.success(request, "Pregunta actualizada correctamente.")
+            return redirect("cursos: detalle_formulario", pk = formulario.id)
+    else:
+        pregunta_form = PreguntaForm(instance=pregunta)
+        formset = None
+        if pregunta.tipo == Pregunta.TIPO_SELECCION:
+            formset = OpcionRespuestaFormSet(instance=pregunta)
+    return render(
+        request,
+        "cursos/editar_pregunta.html",
+        {
+            "formulario": formulario,
+            "pregunta": pregunta,
+            "pregunta_form": pregunta_form,
+            "formset": formset,
+        },
+    )
+     
+    # respuesta del alumnos al formulario
 
 
 @login_required
@@ -329,28 +365,39 @@ def responder_formulario(request, formulario_id):
                 formulario=formulario,
             )
             correctas = 0
-            total = preguntas.count()
+            total_auto = 0
 
             for pregunta in preguntas:
                 field_name = f"preguntas_{pregunta.id}"
-                opcion_id = int(form.cleaned_data[field_name])
-                opcion = OpcionRespuesta.objects.get(
-                    id=opcion_id,
-                    pregunta=pregunta,
+
+                if pregunta.tipo == Pregunta.TIPO_ABIERTA:
+                    texto = form.cleaned_data[field_name]
+
+                    RespuestaAlumno.objects.create(
+                        evaluacion=evaluacion,
+                        pregunta=pregunta,
+                        respuesta_texto=texto
+                    )
+                else:
+                    total_auto += 1
+                    opcion_id = int(form.cleaned_data[field_name])
+                    opcion = OpcionRespuesta.objects.get(
+                        id=opcion_id,
+                        pregunta=pregunta,
                 )
                 # guardar respuesta del alumno
-                RespuestaAlumno.objects.create(
-                    evaluacion=evaluacion,
-                    pregunta=pregunta,
-                    opcion=opcion,
+                    RespuestaAlumno.objects.create(
+                        evaluacion=evaluacion,
+                        pregunta=pregunta,
+                        opcion=opcion,
                 )
-
-                if opcion.es_correcta:
-                    correctas += 1
-
+                    if opcion.es_correcta:
+                     correctas += 1
+                     
             # calcular puntaje (0-100%)
-            puntaje = (correctas / total)*100 if total > 0 else 0
+            puntaje = (correctas / total_auto)*100 if total_auto > 0 else 0
             evaluacion.puntaje = puntaje
+        
 
             # Regla de aprobacion: 60% o mas (se puede cambiar)
             evaluacion.aprobado = puntaje >= 60

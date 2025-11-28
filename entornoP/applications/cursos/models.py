@@ -178,6 +178,13 @@ class Pregunta(models.Model):
     """
     Pregunta perteneciente a un formulario (examen/simulación/cuestionario).
     """
+    TIPO_SELECCION = "seleccion"
+    TIPO_ABIERTA = "abierta"
+
+    TIPO_CHOICES = [
+        (TIPO_SELECCION, "Selección múltiple"),
+        (TIPO_ABIERTA, "Pregunta abierta"),
+    ]
     formulario = models.ForeignKey(
         Formulario,
         on_delete=models.CASCADE,
@@ -185,6 +192,12 @@ class Pregunta(models.Model):
     )
     texto = models.TextField()
     orden = models.PositiveIntegerField(default=1)
+
+    tipo = models.CharField(
+        max_length=20,
+        choices = TIPO_CHOICES,
+        default = TIPO_SELECCION,
+    )
 
     # opcional: tipo de pregunta
     # tipo = models.CharField(
@@ -225,7 +238,13 @@ class RespuestaAlumno(models.Model):
         related_name="respuestas",
     )
     pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
-    opcion = models.ForeignKey(OpcionRespuesta, on_delete=models.CASCADE)
+    opcion = models.ForeignKey(
+        OpcionRespuesta,
+        on_delete=models.CASCADE,
+        null = True,
+        blank = True,
+        )
+    respuesta_texto = models.TextField(null = True, blank = True)
 
     class Meta:
         unique_together = ("evaluacion", "pregunta")

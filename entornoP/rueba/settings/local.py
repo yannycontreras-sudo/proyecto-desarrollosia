@@ -1,5 +1,7 @@
 from .base import *
 import os
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -19,6 +21,7 @@ DATABASES = {
 
     }
 }
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -40,8 +43,10 @@ JAZZMIN_SETTINGS = {
     "site_brand": "UCN Proyecto Kinesiología",
     "site_logo": "img/imglogo_ucn.png",
     "custom_css": "css/admin_custom.css",
-    "custom_js": None, 
+    "custom_js": None,
     "icons": {
-    "auth.User": "fas fa-user",
-    "auth.Group": "fas fa-users",
-    },}
+        "auth.User": "fas fa-user",
+        "auth.Group": "fas fa-users",
+    },
+
+}

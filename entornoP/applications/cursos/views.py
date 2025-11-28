@@ -7,6 +7,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import ProgresoModulo
 
 from .models import Curso, Inscripcion, Modulo, Contenido
 from .forms import CursoForm, ModuloForm, ContenidoForm
@@ -296,9 +300,10 @@ def crear_pregunta(request, formulario_id):
         }
     )
 
-@login_required 
+
+@login_required
 def editar_pregunta(request, pregunta_id):
-    pregunta = get_object_or_404(Pregunta, id = pregunta_id)
+    pregunta = get_object_or_404(Pregunta, id=pregunta_id)
     formulario = pregunta.formulario
     if hasattr(request.user, "is_teacher") and not request.user.is_teacher() and getattr(reguest.user, "role, None") != "admin":
         return HttpResponseForbidden("No tienes permiso para editar esta pregunta.")
@@ -306,16 +311,16 @@ def editar_pregunta(request, pregunta_id):
         pregunta_form = PreguntaForm(request.POST, instance=pregunta)
         formset = None
         if pregunta.tipo == Pregunta.TIPO_SELECCION:
-            formset = OpcionRespuestaFormSet(request.POST, instance = pregunta)
+            formset = OpcionRespuestaFormSet(request.POST, instance=pregunta)
         if pregunta_form.is_valid() and (formset is None or formset.is_valid()):
             pregunta_form.save()
-            if formset is  not None:
-                opciones = formset.save(commit = False)
+            if formset is not None:
+                opciones = formset.save(commit=False)
                 for opcion in opciones:
                     opcion.pregunta = pregunta
                     opcion.save()
             messages.success(request, "Pregunta actualizada correctamente.")
-            return redirect("cursos: detalle_formulario", pk = formulario.id)
+            return redirect("cursos: detalle_formulario", pk=formulario.id)
     else:
         pregunta_form = PreguntaForm(instance=pregunta)
         formset = None
@@ -331,7 +336,7 @@ def editar_pregunta(request, pregunta_id):
             "formset": formset,
         },
     )
-     
+
     # respuesta del alumnos al formulario
 
 
@@ -384,20 +389,19 @@ def responder_formulario(request, formulario_id):
                     opcion = OpcionRespuesta.objects.get(
                         id=opcion_id,
                         pregunta=pregunta,
-                )
+                    )
                 # guardar respuesta del alumno
                     RespuestaAlumno.objects.create(
                         evaluacion=evaluacion,
                         pregunta=pregunta,
                         opcion=opcion,
-                )
+                    )
                     if opcion.es_correcta:
-                     correctas += 1
-                     
+                        correctas += 1
+
             # calcular puntaje (0-100%)
             puntaje = (correctas / total_auto)*100 if total_auto > 0 else 0
             evaluacion.puntaje = puntaje
-        
 
             # Regla de aprobacion: 60% o mas (se puede cambiar)
             evaluacion.aprobado = puntaje >= 60
@@ -418,3 +422,27 @@ def responder_formulario(request, formulario_id):
                 "form": form,
             },
         )
+
+
+class ActualizarProgresoModulo(APIView):
+
+    def post(self, request, modulo_id):
+        usuario = request.user
+        porcentaje = request.data.get("progreso")
+
+        if porcentaje is None:
+            return Response({"error": "Debe enviar el porcentaje de progreso."}, status=400)
+
+        progreso, creado = ProgresoModulo.objects.get_or_create(
+            usuario=usuario,
+            modulo_id=modulo_id
+        )
+
+        progreso.progreso = int(porcentaje)
+        progreso.save()     # ← aquí se ejecuta el AUTO-COMPLETADO
+
+        return Response({
+            "modulo": progreso.modulo.titulo,
+            "progreso": progreso.progreso,
+            "estado": progreso.estado,
+        })

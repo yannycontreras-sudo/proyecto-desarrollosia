@@ -4,6 +4,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages   
 
 from .forms import RegistroForm, LoginForm
+<<<<<<< Updated upstream
+=======
+from applications.cursos.models import Curso, Modulo, ProgresoModulo
+
+
+
+>>>>>>> Stashed changes
 
 
 def registro_view(request):

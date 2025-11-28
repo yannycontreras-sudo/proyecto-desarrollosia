@@ -276,9 +276,93 @@ class FormularioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         )
         context["preguntas"] = preguntas
         return context
+<<<<<<< Updated upstream
 from django.http import HttpResponseForbidden
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+=======
+    
+
+# ======================================
+# EDITAR VARIAS PREGUNTAS DEL FORMULARIO
+# ======================================
+
+@login_required
+def editar_preguntas_formulario(request, formulario_id):
+    formulario = get_object_or_404(Formulario, id=formulario_id)
+
+    # Solo docentes / admins
+    user = request.user
+    if getattr(user, "role", None) not in ("teacher", "admin") and not user.is_superuser:
+        return HttpResponseForbidden("No tienes permiso para editar preguntas.")
+
+    if request.method == "POST":
+        formset = PreguntaConOpcionesFormSet(request.POST)
+
+        if formset.is_valid():
+            # Eliminar preguntas anteriores
+            Pregunta.objects.filter(formulario=formulario).delete()
+
+            for form in formset:
+                if not form.cleaned_data or form.cleaned_data.get("DELETE"):
+                    continue
+
+                texto = (form.cleaned_data.get("texto") or "").strip()
+                if not texto:
+                    continue
+
+                orden = form.cleaned_data.get("orden") or 1
+                tipo = form.cleaned_data.get("tipo")
+
+                pregunta = Pregunta.objects.create(
+                    formulario=formulario,
+                    texto=texto,
+                    orden=orden,
+                    tipo=tipo,
+                )
+
+                # Guardar opciones si es selección múltiple
+                if tipo == Pregunta.TIPO_SELECCION:
+                    for i in range(1, 5):
+                        op_texto = (form.cleaned_data.get(f"opcion_{i}") or "").strip()
+                        es_corr = form.cleaned_data.get(f"correcta_{i}", False)
+
+                        if op_texto:
+                            OpcionRespuesta.objects.create(
+                                pregunta=pregunta,
+                                texto=op_texto,
+                                es_correcta=es_corr,
+                            )
+
+            messages.success(request, "Preguntas actualizadas correctamente.")
+            return redirect("cursos:detalle_formulario", formulario.id)
+
+    else:
+        inicial = []
+        preguntas = formulario.preguntas.all().order_by("orden")
+
+        for p in preguntas:
+            data = {
+                "texto": p.texto,
+                "orden": p.orden,
+                "tipo": p.tipo,
+            }
+            opciones = p.opciones.all()
+            for i, op in enumerate(opciones[:4], start=1):
+                data[f"opcion_{i}"] = op.texto
+                data[f"correcta_{i}"] = op.es_correcta
+            inicial.append(data)
+
+        formset = PreguntaConOpcionesFormSet(initial=inicial)
+
+    return render(
+        request,
+        "cursos/editar_preguntas_formulario.html",
+        {"formulario": formulario, "formset": formset},
+    )
+
+
+>>>>>>> Stashed changes
 
 
 @login_required

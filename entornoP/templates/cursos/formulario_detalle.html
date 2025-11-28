@@ -15,9 +15,9 @@
                 </div>
             {% endif %}
 
-            <!-- Botón para agregar preguntas -->
-            <a href="{% url 'cursos:crear_pregunta' formulario.id %}" class="btn btn-success mb-4">
-                Agregar pregunta
+            <!-- Botón para editar todas las preguntas en un solo editor -->
+            <a href="{% url 'cursos:editar_preguntas_formulario' formulario.id %}" class="btn btn-success mb-4">
+                Editar preguntas del formulario
             </a>
 
             <hr>
@@ -29,11 +29,6 @@
                     {% for pregunta in preguntas %}
                         <li class="list-group-item mb-3">
                             <h5 class="mb-3">{{ pregunta.texto }}</h5>
-                            <div class=""mt-2>
-                                <a href="{% url 'cursos:editar_pregunta' pregunta.id %}"  class="btn-warming btn-sm">
-                                    Editar pregunta
-                                </a>
-                            </div>
 
                             <ul class="list-group">
                                 {% for opcion in pregunta.opciones.all %}

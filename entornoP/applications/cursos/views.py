@@ -1,12 +1,33 @@
-from .forms import PreguntaForm, OpcionRespuestaFormSet, ResponderFormularioForm
-from .models import Formulario, Pregunta, Evaluacion, OpcionRespuesta, RespuestaAlumno
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from .forms import (
+    CursoForm,
+    ModuloForm,
+    ContenidoForm,
+    PreguntaForm,
+    OpcionRespuestaFormSet,
+    ResponderFormularioForm,
+    PreguntaConOpcionesFormSet,   
+)
+
+from .models import (
+    Curso,
+    Modulo,
+    Contenido,
+    Formulario, 
+    Pregunta,
+    Evaluacion,
+    OpcionRespuesta,
+    RespuestaAlumno)
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
+
+
+
 
 from .models import Curso, Inscripcion, Modulo, Contenido
 from .forms import CursoForm, ModuloForm, ContenidoForm
@@ -228,12 +249,13 @@ class ContenidoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 class FormularioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Formulario
-    templete_name = "cursos/formulario_detalle.html"
+    template_name = "cursos/formulario_detalle.html"
     context_object_name = "formulario"
 
     def test_func(self):
         user = self.request.user
-        return getattr(user, "role, None") in ("teacher", "admin") or user.is_superuser
+        # solo docentes, admin o superuser
+        return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -247,6 +269,102 @@ class FormularioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         )
         context["preguntas"] = preguntas
         return context
+from django.http import HttpResponseForbidden
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
+
+
+@login_required
+def editar_preguntas_formulario(request, formulario_id):
+    """
+    Pantalla donde el docente puede crear/editar varias preguntas
+    del formulario a la vez (selección múltiple + abiertas).
+    """
+    formulario = get_object_or_404(Formulario, id=formulario_id)
+
+    user = request.user
+    if getattr(user, "role", None) not in ("teacher", "admin") and not user.is_superuser:
+        return HttpResponseForbidden("No tienes permiso para editar preguntas.")
+
+    if request.method == "POST":
+        formset = PreguntaConOpcionesFormSet(request.POST)
+
+        if formset.is_valid():
+            # Borramos preguntas anteriores para simplificar la lógica
+            Pregunta.objects.filter(formulario=formulario).delete()
+
+            for form in formset:
+                # forms marcados para borrar o totalmente vacíos se saltan
+                if not form.cleaned_data or form.cleaned_data.get("DELETE"):
+                    continue
+
+                texto = (form.cleaned_data.get("texto") or "").strip()
+                if not texto:
+                    continue
+
+                orden = form.cleaned_data.get("orden") or 1
+                tipo = form.cleaned_data.get("tipo")
+
+                pregunta = Pregunta.objects.create(
+                    formulario=formulario,
+                    texto=texto,
+                    orden=orden,
+                    tipo=tipo,
+                )
+
+                # Si es selección múltiple, creamos las opciones
+                if tipo == Pregunta.TIPO_SELECCION:
+                    opciones = []
+                    for i in range(1, 5):
+                        op_text = (form.cleaned_data.get(f"opcion_{i}") or "").strip()
+                        es_corr = form.cleaned_data.get(f"correcta_{i}", False)
+                        if op_text:
+                            opciones.append((op_text, es_corr))
+
+                    if opciones:
+                        # Si ninguna está marcada como correcta, marcamos la 1ª
+                        if not any(es_corr for _, es_corr in opciones):
+                            txt0, _ = opciones[0]
+                            opciones[0] = (txt0, True)
+
+                        for op_text, es_corr in opciones:
+                            OpcionRespuesta.objects.create(
+                                pregunta=pregunta,
+                                texto=op_text,
+                                es_correcta=es_corr,
+                            )
+
+            messages.success(request, "Preguntas del formulario actualizadas correctamente.")
+            return redirect("cursos:detalle_formulario", formulario.id)
+    else:
+        # Cargar preguntas existentes en el formset
+        inicial = []
+        for p in formulario.preguntas.all().order_by("orden"):
+            data = {
+                "texto": p.texto,
+                "orden": p.orden,
+                "tipo": p.tipo,
+            }
+            opciones = list(p.opciones.all())
+            for i, op in enumerate(opciones[:4], start=1):
+                data[f"opcion_{i}"] = op.texto
+                data[f"correcta_{i}"] = op.es_correcta
+            inicial.append(data)
+
+        if inicial:
+            formset = PreguntaConOpcionesFormSet(initial=inicial)
+        else:
+            formset = PreguntaConOpcionesFormSet()
+
+    return render(
+        request,
+        "cursos/editar_preguntas_formulario.html",
+        {
+            "formulario": formulario,
+            "formset": formset,
+        },
+    )
+
 
 
 # preguntas
@@ -270,7 +388,8 @@ def crear_pregunta(request, formulario_id):
 
             opciones = formset.save(commit=False)
 
-            tiene_correcta = any(o.es_correcta for o in opciones)
+            tiene_correcta = any(o.es_correcta 
+                                 for o in opciones)
             if not tiene_correcta:
                 formset, forms[0].add_error(
                     "es correcta",

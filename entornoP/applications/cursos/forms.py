@@ -75,4 +75,48 @@ class ResponderFormularioForm(forms.Form):
                 required = True,
             )
 
+from django.forms import formset_factory
+from .models import Pregunta, OpcionRespuesta
+
+
+class PreguntaConOpcionesForm(forms.Form):
+    """
+    Un formulario que representa UNA pregunta del formulario,
+    con sus posibles opciones (si es de selección múltiple).
+    """
+    texto = forms.CharField(
+        label="Texto de la pregunta",
+        widget=forms.Textarea(attrs={"rows": 2}),
+    )
+    orden = forms.IntegerField(label="Orden", initial=1)
+
+    # usamos los choices definidos en el modelo Pregunta
+    tipo = forms.ChoiceField(
+        label="Tipo de pregunta",
+        choices=Pregunta.TIPO_CHOICES,
+        initial=Pregunta.TIPO_SELECCION,
+    )
+
+    # Hasta 4 opciones (puedes subir o bajar la cantidad)
+    opcion_1 = forms.CharField(label="Opción 1", required=False)
+    correcta_1 = forms.BooleanField(label="Correcta", required=False)
+
+    opcion_2 = forms.CharField(label="Opción 2", required=False)
+    correcta_2 = forms.BooleanField(label="Correcta", required=False)
+
+    opcion_3 = forms.CharField(label="Opción 3", required=False)
+    correcta_3 = forms.BooleanField(label="Correcta", required=False)
+
+    opcion_4 = forms.CharField(label="Opción 4", required=False)
+    correcta_4 = forms.BooleanField(label="Correcta", required=False)
+
+
+# Formset: varias preguntas en una sola página
+PreguntaConOpcionesFormSet = formset_factory(
+    PreguntaConOpcionesForm,
+    extra=3,        # cuántas preguntas vacías aparecen por defecto
+    can_delete=True # permite marcar para borrar preguntas
+)
+
+
 

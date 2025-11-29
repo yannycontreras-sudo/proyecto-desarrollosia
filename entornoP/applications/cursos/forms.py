@@ -1,5 +1,5 @@
 from django import forms
-from .models import Curso, Modulo, Contenido
+from .models import Curso, Modulo, Contenido, Pregunta, OpcionRespuesta
 
 
 class CursoForm(forms.ModelForm):
@@ -118,5 +118,48 @@ PreguntaConOpcionesFormSet = formset_factory(
     can_delete=True # permite marcar para borrar preguntas
 )
 
+class ResponderFormularioForm(forms.Form):
+    """
+    Formulario dinamico para que el alumno responda en Formulario
+    Crea un campo por cada pregunta:
+    -Seleccion Multiple ChoiceField con RadioSelect
+    -Abierta CharField co Texttarea
+    """
+    def __init__(self, *args, preguntas = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.preguntas = preguntas or []
+
+        for pregunta in self.preguntas:
+            field_name = f"preguntas_{pregunta.id}"
+
+            #preguta abierta 
+
+            if pregunta.tipo == Pregunta.TIPO_ABIERTA:
+                self.fields[field_name] = forms.ChField(
+                    label = pregunta.texto,
+                    widget = forms.Textarea(
+                        attrs={
+                            "rows": 3,
+                            "class": "form-control",
+                            "placeholder": "Escribe tu respuesta...",
+                        }
+                    ),
+                    requiered = True
+                )
+
+                    #pregunta dde seleccion multiple
+
+            else:
+                opciones =[
+                    (op.id, op.texto)
+                    for op in pregunta.opciones.all()
+                ]
+                self.fields[field_name] = forms.ChoiceField(
+                    label = pregunta.texto,
+                    choices=opciones,
+                    widget=forms.RadioSelect,
+                    required = True,
+                )
+                
 
 

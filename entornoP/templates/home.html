@@ -80,6 +80,10 @@
                     <a href="{% url 'core:home' %}" class="nav-item nav-link active">Home</a>
                     <a href="{% url 'cursos:lista' %}" class="nav-item nav-link">Cursos</a>
 
+                    {% if user.is_authenticated and user.role == 'student' %}
+                    <a href = "{% url 'cursos:mis_cursos' %}" class="nav-item nav-link">Mis cursos</a>
+                    {% endif %}
+
                     {# Botón "Crear curso" solo para docentes o admin #}
                     {% if user.is_authenticated and user.role == 'teacher' %}
                     <a href="{% url 'cursos:crear' %}" class="nav-item nav-link">

@@ -1,0 +1,38 @@
+{% extends "home.html" %}
+
+{% block title %}Mis cursos{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Mis cursos</h1>
+
+    {% if cursos %}
+        <div class="row">
+            {% for curso in cursos %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ curso.nombre }}</h5>
+                            {% if curso.descripcion %}
+                                <p class="card-text text-muted">
+                                    {{ curso.descripcion|truncatechars:140 }}
+                                </p>
+                            {% endif %}
+                            <div class="mt-auto">
+                                <a href="{% url 'cursos:detalle' curso.id %}"
+                                   class="btn btn-primary btn-sm">
+                                    Ver curso y evaluaciones
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            Aún no estás inscrito en ningún curso.
+        </div>
+    {% endif %}
+</div>
+{% endblock content %}

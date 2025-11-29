@@ -18,6 +18,7 @@ from .views import (
     editar_pregunta,
     ActualizarProgresoModulo,
     responder_formulario,
+    crear_formulario,
 )
 
 
@@ -74,6 +75,12 @@ urlpatterns = [
  
 
     # formularios (docente)
+
+    path(
+        "contenidos/<int:contenido_id>/formulario/crear/",
+        crear_formulario,
+        name="crear_formulario",
+    ),
 
     path(
         "formularios/<int:pk>/",

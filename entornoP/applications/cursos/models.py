@@ -294,7 +294,7 @@ class ProgresoModulo(models.Model):
         unique_together = ("usuario", "modulo")
 
     def save(self, *args, **kwargs):
-        # 🔥 REGLA AUTOMÁTICA: si llega a 100%, se marca COMO COMPLETADO
+        #  REGLA AUTOMÁTICA: si llega a 100%, se marca COMO COMPLETADO
         if self.progreso >= 100:
             self.estado = "completado"
 

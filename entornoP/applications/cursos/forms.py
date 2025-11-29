@@ -1,5 +1,5 @@
 from django import forms
-from .models import Curso, Modulo, Contenido, Pregunta, OpcionRespuesta
+from .models import Curso, Modulo, Contenido, Pregunta, OpcionRespuesta, Formulario
 
 
 class CursoForm(forms.ModelForm):
@@ -161,5 +161,8 @@ class ResponderFormularioForm(forms.Form):
                     required = True,
                 )
                 
-
+class FormularioForm(forms.ModelForm):
+    class Meta:
+        model = Formulario
+        fields ={"instrucciones"}
 

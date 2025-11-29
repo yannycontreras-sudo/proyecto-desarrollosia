@@ -12,7 +12,8 @@ from .forms import (
     PreguntaForm,
     OpcionRespuestaFormSet,
     ResponderFormularioForm,
-    PreguntaConOpcionesFormSet,   
+    PreguntaConOpcionesFormSet,
+    FormularioForm,
 )
 
 from .models import (
@@ -571,4 +572,24 @@ class ActualizarProgresoModulo(APIView):
             "modulo": progreso.modulo.titulo,
             "progreso": progreso.progreso,
             "estado": progreso.estado,
+        })
+@login_required
+def crear_formulario(request,contenido_id):
+    contenido = get_object_or_404(Contenido, pk=contenido_id)
+
+    #solo docente/admin pueden crear Formulario
+    if request.user.role not in ["teacher", "admin"]:
+        return redirect("cursos:detalle", pk=contenido.modulo.curso.pk)
+    if request.method == "POST":
+        form = FormularioForm(request.POST)
+        if form.is_valid():
+            formulario = form.save(commit=False)
+            formulario.contenido = contenido
+            formulario.save()
+            return redirect("cursos:editar_preguntas_formulario", formulario.pk)
+        else:
+            form = FormularioForm()
+        return render(request, "cursos/formulario_form.html",{
+            "form":form,
+            "contenido": contenido,
         })

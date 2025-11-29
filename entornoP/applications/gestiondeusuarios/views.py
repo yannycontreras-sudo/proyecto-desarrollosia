@@ -1,22 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages   
+from django.contrib import messages
 
 from .forms import RegistroForm, LoginForm
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-from applications.cursos.models import Curso, Modulo, ProgresoModulo
-=======
-from applications.cursos.models import Curso, Modulo, ProgresoModulo
-
-
->>>>>>> Stashed changes
-
-
-
->>>>>>> Stashed changes
 
 
 def registro_view(request):
@@ -28,8 +14,8 @@ def registro_view(request):
             return redirect("core:home")
     else:
         form = RegistroForm()
-    return render(request, "gestiondeusuarios/registro.html", {"form": form})
 
+    return render(request, "gestiondeusuarios/registro.html", {"form": form})
 
 
 def login_view(request):
@@ -45,9 +31,10 @@ def login_view(request):
         else:
             messages.error(request, "Usuario o contraseña incorrectos.")
     else:
-        form = LoginForm(request)  # importante pasar request también aquí
+        form = LoginForm(request)
 
     return render(request, "gestiondeusuarios/login.html", {"form": form})
+
 
 def logout_view(request):
     logout(request)

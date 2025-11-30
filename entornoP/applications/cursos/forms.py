@@ -1,6 +1,17 @@
 from django import forms
-from .models import Curso, Modulo, Contenido, Pregunta, OpcionRespuesta, Formulario
+from django.forms import inlineformset_factory, formset_factory
 
+from .models import (
+    Curso,
+    Modulo,
+    Contenido,
+    Pregunta,
+    OpcionRespuesta,
+    Formulario,
+)
+
+
+# ======================= CURSOS / MÓDULOS / CONTENIDOS =======================
 
 class CursoForm(forms.ModelForm):
     class Meta:
@@ -9,10 +20,12 @@ class CursoForm(forms.ModelForm):
         # si quisieras que el docente pueda agregar otros docentes:
         # fields = ["nombre", "descripcion", "docentes"]
 
+
 class ModuloForm(forms.ModelForm):
     class Meta:
         model = Modulo
         fields = ["titulo", "descripcion", "orden"]
+
 
 class ContenidoForm(forms.ModelForm):
     class Meta:
@@ -20,81 +33,66 @@ class ContenidoForm(forms.ModelForm):
         fields = ["titulo", "descripcion", "archivo"]
 
 
-from .models import Pregunta, OpcionRespuesta
-from django.forms import inlineformset_factory
+# ======================= PREGUNTAS / OPCIONES (MODELO DIRECTO) =======================
 
 class PreguntaForm(forms.ModelForm):
     class Meta:
         model = Pregunta
-        fields = ["texto" , "orden", "tipo"]
+        fields = ["texto", "orden", "tipo", "respuesta_esperada"]
+
 
 class OpcionRespuestaForm(forms.ModelForm):
     class Meta:
         model = OpcionRespuesta
-        fields = ["texto" , "es_correcta"]
+        fields = ["texto", "es_correcta"]
+
 
 OpcionRespuestaFormSet = inlineformset_factory(
     Pregunta,
     OpcionRespuesta,
     form=OpcionRespuestaForm,
-    extra = 4,
-    can_delete = False
+    extra=4,
+    can_delete=False,
 )
 
-from .models import Pregunta, OpcionRespuesta
-from django import forms
 
-class ResponderFormularioForm(forms.Form):
-    """
-    Crea dinamicamente un campo por cada pregunta del formulario.
-    - Si la pregunta es de seleccion multiple --> ChoiceField con radios.
-    -Si la prefunta es abierta --> CharField con Textarea
-    """
-    def __int__(self, *args,**kwargs):
-        preguntas = kwargs.pop("preguntas")
-        super().__init__(*args, **kwargs)
-
-        for pregunta in preguntas:
-            field_name = f"pregunta_{pregunta.id}"
-
-            if pregunta.tipo == Pregunta.TIPO_ABIERTA:
-                self.fields[field_name] = forms.CharField(
-                    label = pregunta.texto,
-                    widget = forms.Textarea(attrs={"rows": 3}),
-                    required = False,
-                )
-            else:
-                choices = [
-                (opcion.id, opcion.texto)
-                for opcion in pregunta.opciones.all()
-            ]
-            self.fields[field_name] = forms.ChoiceField(
-                label=pregunta.texto,
-                choices=choices,
-                widget=forms.RadioSelect,
-                required = True,
-            )
-
-from django.forms import formset_factory
-from .models import Pregunta, OpcionRespuesta
-
+# ======================= FORM “PREGUNTA + OPCIONES” (para el formset de edición) =====
 
 class PreguntaConOpcionesForm(forms.Form):
     """
     Un formulario que representa UNA pregunta del formulario,
     con sus posibles opciones (si es de selección múltiple).
+    Lo usamos normalmente dentro de un formset.
     """
     texto = forms.CharField(
         label="Texto de la pregunta",
-        widget=forms.Textarea(attrs={"rows": 2}),
+        widget=forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
     )
-    orden = forms.IntegerField(label="Orden", initial=1)
+    orden = forms.IntegerField(
+        label="Orden",
+        initial=1,
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
 
     # usamos los choices definidos en el modelo Pregunta
     tipo = forms.ChoiceField(
         label="Tipo de pregunta",
         choices=Pregunta.TIPO_CHOICES,
         initial=Pregunta.TIPO_SELECCION,
+        widget=forms.Select(attrs={"class": "form-control tipo-pregunta-select"}),
+    )
+
+    # 👉 NUEVO: respuesta esperada SOLO para pregunta abierta
+    respuesta_esperada = forms.CharField(
+        label="Respuesta esperada (solo pregunta abierta)",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "rows": 2,
+                "class": "form-control",
+                "placeholder": "Escribe aquí la respuesta modelo para una pregunta abierta...",
+            }
+        ),
     )
 
     # Hasta 4 opciones (puedes subir o bajar la cantidad)
@@ -118,51 +116,54 @@ PreguntaConOpcionesFormSet = formset_factory(
     can_delete=True # permite marcar para borrar preguntas
 )
 
+
+# ======================= FORMULARIO PARA RESPONDER (ALUMNO) =======================
+
 class ResponderFormularioForm(forms.Form):
     """
-    Formulario dinamico para que el alumno responda en Formulario
+    Formulario dinámico para que el alumno responda un Formulario.
     Crea un campo por cada pregunta:
-    -Seleccion Multiple ChoiceField con RadioSelect
-    -Abierta CharField co Texttarea
+      - Pregunta de selección múltiple -> ChoiceField con RadioSelect
+      - Pregunta abierta -> CharField con Textarea
     """
-    def __init__(self, *args, preguntas = None, **kwargs):
+
+    def __init__(self, *args, preguntas=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.preguntas = preguntas or []
 
         for pregunta in self.preguntas:
-            field_name = f"preguntas_{pregunta.id}"
+            field_name = f"pregunta_{pregunta.id}"
 
-            #preguta abierta 
-
+            # Pregunta abierta
             if pregunta.tipo == Pregunta.TIPO_ABIERTA:
-                self.fields[field_name] = forms.ChField(
-                    label = pregunta.texto,
-                    widget = forms.Textarea(
+                self.fields[field_name] = forms.CharField(
+                    label=pregunta.texto,
+                    widget=forms.Textarea(
                         attrs={
                             "rows": 3,
                             "class": "form-control",
                             "placeholder": "Escribe tu respuesta...",
                         }
                     ),
-                    requiered = True
+                    required=True,
                 )
-
-                    #pregunta dde seleccion multiple
-
             else:
-                opciones =[
+                # Selección múltiple
+                opciones = [
                     (op.id, op.texto)
                     for op in pregunta.opciones.all()
                 ]
                 self.fields[field_name] = forms.ChoiceField(
-                    label = pregunta.texto,
+                    label=pregunta.texto,
                     choices=opciones,
                     widget=forms.RadioSelect,
-                    required = True,
+                    required=True,
                 )
-                
+
+
+# ======================= FORMULARIO (MODELO) =======================
+
 class FormularioForm(forms.ModelForm):
     class Meta:
         model = Formulario
-        fields ={"instrucciones"}
-
+        fields = ["instrucciones"]

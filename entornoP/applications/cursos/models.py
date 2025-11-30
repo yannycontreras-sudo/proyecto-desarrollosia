@@ -201,6 +201,11 @@ class Pregunta(models.Model):
         default=TIPO_SELECCION,
     )
 
+    respuesta_esperada = models.TextField(
+        blank = True,
+        help_text = "Sol se usa si la pregunta es abierta.",
+    )
+
     # opcional: tipo de pregunta
     # tipo = models.CharField(
     #     max_length=20,

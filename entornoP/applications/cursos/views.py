@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-
+from difflib import SequenceMatcher
 
 
 from .forms import (
@@ -316,12 +316,15 @@ def editar_preguntas_formulario(request, formulario_id):
 
                 orden = form.cleaned_data.get("orden") or 1
                 tipo = form.cleaned_data.get("tipo")
+                respuesta_esperada = (form.cleaned_data.get("respuesta_esperada") or "").strip()
 
+                # Creamos la pregunta
                 pregunta = Pregunta.objects.create(
                     formulario=formulario,
                     texto=texto,
                     orden=orden,
                     tipo=tipo,
+                    respuesta_esperada=respuesta_esperada if tipo == Pregunta.TIPO_ABIERTA else "",
                 )
 
                 # Si es selección múltiple, creamos las opciones
@@ -348,6 +351,7 @@ def editar_preguntas_formulario(request, formulario_id):
 
             messages.success(request, "Preguntas del formulario actualizadas correctamente.")
             return redirect("cursos:detalle_formulario", formulario.id)
+
     else:
         # Cargar preguntas existentes en el formset
         inicial = []
@@ -356,6 +360,7 @@ def editar_preguntas_formulario(request, formulario_id):
                 "texto": p.texto,
                 "orden": p.orden,
                 "tipo": p.tipo,
+                "respuesta_esperada": p.respuesta_esperada or "",
             }
             opciones = list(p.opciones.all())
             for i, op in enumerate(opciones[:4], start=1):
@@ -472,11 +477,16 @@ def responder_formulario(request, formulario_id):
     formulario = get_object_or_404(Formulario, id=formulario_id)
     usuario = request.user
 
+    # Solo alumnos (role=student) o superuser
     if getattr(usuario, "role", None) != "student" and not usuario.is_superuser:
         return HttpResponseForbidden("Solo los alumnos pueden responder este formulario.")
+
+    # Evitar que responda dos veces
     if Evaluacion.objects.filter(usuario=usuario, formulario=formulario).exists():
         messages.info(request, "Ya has respondido este formulario.")
         return redirect("cursos:detalle_formulario", pk=formulario.id)
+
+    # Traer preguntas del formulario
     preguntas = (
         Pregunta.objects
         .filter(formulario=formulario)
@@ -485,70 +495,98 @@ def responder_formulario(request, formulario_id):
     )
 
     if not preguntas:
-        messages.info(
-            request, "Este formulario aun no tiene preguntas configuradas.")
+        messages.info(request, "Este formulario aún no tiene preguntas configuradas.")
         return redirect("cursos:detalle_formulario", pk=formulario.id)
+
     if request.method == "POST":
-        form = ResponderFormularioForm(request.POST, preguntass=preguntas)
+        # 👈 OJO: aquí va 'preguntas', sin typo
+        form = ResponderFormularioForm(request.POST, preguntas=preguntas)
+
         if form.is_valid():
-            # crear la evaluacion (intento del alumno)
+            # Crear la evaluación (intento del alumno)
             evaluacion = Evaluacion.objects.create(
                 usuario=usuario,
                 formulario=formulario,
             )
+
             correctas = 0
-            total_auto = 0
+            total_preguntas = len(preguntas)
 
             for pregunta in preguntas:
-                field_name = f"preguntas_{pregunta.id}"
+                field_name = f"pregunta_{pregunta.id}"
+
+                es_correcta = False
+                respuesta_texto = None
+                opcion = None
 
                 if pregunta.tipo == Pregunta.TIPO_ABIERTA:
-                    texto = form.cleaned_data[field_name]
+                    # PREGUNTA ABIERTA
+                    texto = (form.cleaned_data.get(field_name) or "").strip()
+                    respuesta_texto = texto
 
+                    # Si hay respuesta_esperada definida, comparamos
+                    if pregunta.respuesta_esperada:
+                        if es_similar(pregunta.respuesta_esperada, texto):
+                            es_correcta = True
+
+                    # Guardamos la respuesta de texto
                     RespuestaAlumno.objects.create(
                         evaluacion=evaluacion,
                         pregunta=pregunta,
-                        respuesta_texto=texto
+                        respuesta_texto=texto,
                     )
+
                 else:
-                    total_auto += 1
-                    opcion_id = int(form.cleaned_data[field_name])
-                    opcion = OpcionRespuesta.objects.get(
-                        id=opcion_id,
-                        pregunta=pregunta,
-                    )
-                # guardar respuesta del alumno
+                    # PREGUNTA SELECCIÓN MÚLTIPLE
+                    opcion_id = form.cleaned_data.get(field_name)
+                    try:
+                        opcion = OpcionRespuesta.objects.get(
+                            id=opcion_id,
+                            pregunta=pregunta,
+                        )
+                    except (OpcionRespuesta.DoesNotExist, TypeError, ValueError):
+                        opcion = None
+
                     RespuestaAlumno.objects.create(
                         evaluacion=evaluacion,
                         pregunta=pregunta,
                         opcion=opcion,
                     )
-                    if opcion.es_correcta:
-                        correctas += 1
 
-            # calcular puntaje (0-100%)
-            puntaje = (correctas / total_auto)*100 if total_auto > 0 else 0
+                    if opcion and opcion.es_correcta:
+                        es_correcta = True
+
+                if es_correcta:
+                    correctas += 1
+
+            # calcular puntaje (0-100%) considerando TODAS las preguntas
+            puntaje = (correctas / total_preguntas) * 100 if total_preguntas > 0 else 0
             evaluacion.puntaje = puntaje
 
-            # Regla de aprobacion: 60% o mas (se puede cambiar)
+            # Regla de aprobación: 60% o más (se puede cambiar)
             evaluacion.aprobado = puntaje >= 60
             evaluacion.save()
 
             messages.success(
                 request,
-                f"Evaluacion enviada. Tu puntaje fue {puntaje:.2f}%.",
+                f"Evaluación enviada. Tu puntaje fue {puntaje:.2f}%.",
             )
             return redirect("cursos:detalle_formulario", pk=formulario.id)
-        else:
-            form = ResponderFormularioForm(preguntas=preguntas)
-        return render(
-            request,
-            "cursos/responder_formulario.html",
-            {
-                "formulario": formulario,
-                "form": form,
-            },
-        )
+    else:
+        # GET: mostrar el formulario vacío para responder
+        form = ResponderFormularioForm(preguntas=preguntas)
+
+    # Render tanto para GET como para POST inválido
+    return render(
+        request,
+        "cursos/responder_formulario.html",
+        {
+            "formulario": formulario,
+            "form": form,
+            "preguntas": preguntas,
+        },
+    )
+
 
 
 class ActualizarProgresoModulo(APIView):
@@ -593,3 +631,16 @@ def crear_formulario(request,contenido_id):
             "form":form,
             "contenido": contenido,
         })
+    
+def es_similar(texto_ref, texto_alumno, umbral=0.7):
+    """
+    compara si la respuesta del alumno es 'parecida' a la respuesta esperada.
+    Devuelve True si la similitud es mayor o igual al umbral (0.7 = 70%).
+    """
+    if not texto_ref or not texto_alumno:
+        return False
+    texto_ref = texto_ref.lower().strip()
+    texto_alumno = texto_alumno.lower().strip()
+
+    ratio = SequenceMatcher(None, texto_ref, texto_alumno).ratio()
+    return ratio >= umbral

@@ -588,6 +588,39 @@ def responder_formulario(request, formulario_id):
     )
 
 
+@login_required
+def respuestas_formulario(request, formulario_id):
+    """
+    Vista para que DOCENTES / ADMIN vean las respuestas de los alumnos
+    a un formulario.
+    """
+    formulario = get_object_or_404(Formulario, id=formulario_id)
+
+    user = request.user
+    if getattr(user, "role", None) not in ("teacher", "admin") and not user.is_superuser:
+        return HttpResponseForbidden(
+            "Solo docentes o administradores pueden ver las respuestas."
+        )
+
+    # Traemos las evaluaciones con sus respuestas
+    evaluaciones = (
+        Evaluacion.objects
+        .filter(formulario=formulario)
+        .select_related("usuario")
+        .prefetch_related("respuestas__pregunta", "respuestas__opcion")
+        .order_by("-fecha")
+    )
+
+    return render(
+        request,
+        "cursos/respuestas_formulario.html",
+        {
+            "formulario": formulario,
+            "evaluaciones": evaluaciones,
+        },
+    )
+
+
 
 class ActualizarProgresoModulo(APIView):
 

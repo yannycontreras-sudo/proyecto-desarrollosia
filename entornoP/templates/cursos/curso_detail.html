@@ -151,10 +151,7 @@
                                                                 </small>
                                                             {% endif %}
 
-                                                            {# =========================================
-                                                               BLOQUE DE EVALUACIONES POR CONTENIDO
-                                                               ========================================= #}
-
+                                      
                                                             {% with contenido.formularios.all as forms_contenido %}
 
                                                                 {% if user.is_authenticated %}
@@ -172,7 +169,7 @@
                                                                                         Ver / editar preguntas
                                                                                     </a>
 
-                                                                                    <a href="{% url 'cursos:responder_formulario' formulario.pk %}"
+                                                                                    <a href="{% url 'cursos:respuestas_formulario' formulario.pk %}"
                                                                                        class="btn btn-sm btn-outline-success">
                                                                                         Ver respuestas
                                                                                     </a>
@@ -220,9 +217,7 @@
                                     {% endif %}
 
 
-                                    {# ============================================
-                                       FORMULARIO ASOCIADO A LA SIMULACIÓN DEL MÓDULO
-                                       ============================================ #}
+                                   
 
                                     {% if modulo.simulacion and modulo.simulacion.formulario %}
                                         {% with formulario=modulo.simulacion.formulario %}

@@ -19,6 +19,7 @@ from .views import (
     ActualizarProgresoModulo,
     responder_formulario,
     crear_formulario,
+    respuestas_formulario,
 )
 
 
@@ -105,7 +106,12 @@ urlpatterns = [
         name="editar_pregunta",
     ),
 
-
+    #ver respuestas de un formulario (DOCENTE/ADMIN)
+    path(
+        "formularios/<int:formulario_id>/respuestas/",
+        respuestas_formulario,
+        name="respuestas_formulario",
+    ),
 
 
     # responder formulario (alumno)

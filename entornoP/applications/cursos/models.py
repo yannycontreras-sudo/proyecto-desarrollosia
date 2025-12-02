@@ -1,15 +1,21 @@
 # applications/cursos/models.py
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
 
+
+# ============================================================
+# CURSOS E INSCRIPCIONES
+# ============================================================
 
 class Curso(models.Model):
     nombre = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True)
 
-    # opcional: docentes asignados al curso
     docentes = models.ManyToManyField(
         User,
         blank=True,
@@ -42,6 +48,10 @@ class Inscripcion(models.Model):
         return f"{self.usuario} en {self.curso}"
 
 
+# ============================================================
+# MÓDULOS, CONTENIDOS, SIMULACIONES, EXÁMENES
+# ============================================================
+
 class Modulo(models.Model):
     curso = models.ForeignKey(
         Curso, on_delete=models.CASCADE, related_name="modulos")
@@ -49,7 +59,6 @@ class Modulo(models.Model):
     descripcion = models.TextField(blank=True)
     orden = models.PositiveIntegerField(default=1)
 
-    # 👇 nuevo campo
     publicado = models.BooleanField(default=False)
 
     def __str__(self):
@@ -57,7 +66,6 @@ class Modulo(models.Model):
 
 
 class Simulacion(models.Model):
-    # 1 módulo -> 1 simulación (1:1)
     modulo = models.OneToOneField(
         Modulo,
         on_delete=models.CASCADE,
@@ -75,8 +83,6 @@ class Contenido(models.Model):
         Modulo, on_delete=models.CASCADE, related_name="contenidos")
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True)
-
-    # permitir vacíos para filas que ya existen
     archivo = models.FileField(upload_to="contenidos/", null=True, blank=True)
 
     def __str__(self):
@@ -94,7 +100,6 @@ class Contenido(models.Model):
 
 
 class Examen(models.Model):
-    # relación N:1 (varios exámenes pueden asociarse al mismo contenido)
     contenido = models.ForeignKey(
         Contenido,
         on_delete=models.CASCADE,
@@ -108,14 +113,6 @@ class Examen(models.Model):
 
 
 class Formulario(models.Model):
-    """
-    Representa el 'bloque de preguntas' que responde el alumno.
-    Según tu diagrama:
-      - Contenido 1:N Formulario
-      - Simulación 1:1 Formulario
-      - Examen 1:1 Formulario
-    """
-
     contenido = models.ForeignKey(
         Contenido,
         on_delete=models.CASCADE,
@@ -145,11 +142,6 @@ class Formulario(models.Model):
 
 
 class Evaluacion(models.Model):
-    """
-    Intento del alumno sobre un formulario.
-    Formulario 1:N Evaluación
-    """
-
     usuario = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -174,12 +166,11 @@ class Evaluacion(models.Model):
         return f"{self.usuario} - {self.formulario}"
 
 
-# ========= Preguntas y respuestas del formulario =========
+# ============================================================
+# PREGUNTAS Y RESPUESTAS
+# ============================================================
 
 class Pregunta(models.Model):
-    """
-    Pregunta perteneciente a un formulario (examen/simulación/cuestionario).
-    """
     TIPO_SELECCION = "seleccion"
     TIPO_ABIERTA = "abierta"
 
@@ -187,6 +178,7 @@ class Pregunta(models.Model):
         (TIPO_SELECCION, "Selección múltiple"),
         (TIPO_ABIERTA, "Pregunta abierta"),
     ]
+
     formulario = models.ForeignKey(
         Formulario,
         on_delete=models.CASCADE,
@@ -194,18 +186,11 @@ class Pregunta(models.Model):
     )
     texto = models.TextField()
     orden = models.PositiveIntegerField(default=1)
-
     tipo = models.CharField(
         max_length=20,
         choices=TIPO_CHOICES,
         default=TIPO_SELECCION,
     )
-
-    # opcional: tipo de pregunta
-    # tipo = models.CharField(
-    #     max_length=20,
-    #     choices=[("single", "Opción única"), ("multi", "Opción múltiple")]
-    # )
 
     class Meta:
         ordering = ["formulario", "orden"]
@@ -215,9 +200,6 @@ class Pregunta(models.Model):
 
 
 class OpcionRespuesta(models.Model):
-    """
-    Opción de respuesta para una pregunta de selección.
-    """
     pregunta = models.ForeignKey(
         Pregunta,
         on_delete=models.CASCADE,
@@ -231,9 +213,6 @@ class OpcionRespuesta(models.Model):
 
 
 class RespuestaAlumno(models.Model):
-    """
-    Respuesta del alumno a una pregunta específica dentro de una evaluación.
-    """
     evaluacion = models.ForeignKey(
         Evaluacion,
         on_delete=models.CASCADE,
@@ -255,12 +234,11 @@ class RespuestaAlumno(models.Model):
         return f"{self.evaluacion} - {self.pregunta_id}"
 
 
-class ProgresoModulo(models.Model):
-    """
-    Registra el estado del estudiante dentro de cada módulo.
-    El estado se cambia AUTOMÁTICAMENTE cuando cumple los requisitos.
-    """
+# ============================================================
+# PROGRESO DEL MÓDULO (AUTOMÁTICO)
+# ============================================================
 
+class ProgresoModulo(models.Model):
     ESTADOS = [
         ("pendiente", "Pendiente"),
         ("en_progreso", "En progreso"),
@@ -286,19 +264,72 @@ class ProgresoModulo(models.Model):
         default="pendiente",
     )
 
-    progreso = models.PositiveIntegerField(default=0)  # porcentaje (0–100)
-
+    progreso = models.PositiveIntegerField(default=0)  # 0–100%
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ("usuario", "modulo")
 
     def save(self, *args, **kwargs):
-        # 🔥 REGLA AUTOMÁTICA: si llega a 100%, se marca COMO COMPLETADO
         if self.progreso >= 100:
             self.estado = "completado"
-
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.usuario} - {self.modulo} ({self.estado})"
+
+
+# ============================================================
+# FUNCIONES AUTOMÁTICAS
+# ============================================================
+
+def marcar_modulo_completado(usuario, modulo):
+    progreso, _ = ProgresoModulo.objects.get_or_create(
+        usuario=usuario,
+        modulo=modulo
+    )
+    progreso.progreso = 100
+    progreso.estado = "completado"
+    progreso.save()
+
+
+def desbloquear_siguiente_modulo(modulo, usuario):
+    curso = modulo.curso
+    modulos = list(curso.modulos.order_by("orden"))
+
+    if modulo in modulos:
+        idx = modulos.index(modulo)
+        if idx + 1 < len(modulos):
+            siguiente = modulos[idx + 1]
+            ProgresoModulo.objects.get_or_create(
+                usuario=usuario,
+                modulo=siguiente
+            )
+
+
+# ============================================================
+# SEÑAL: CUANDO EL ALUMNO APRUEBA UN EXAMEN
+# ============================================================
+
+@receiver(post_save, sender=Evaluacion)
+def evaluar_modulo(sender, instance, created, **kwargs):
+    if instance.aprobado:
+        formulario = instance.formulario
+        contenido = formulario.contenido
+        modulo = contenido.modulo
+        usuario = instance.usuario
+
+        marcar_modulo_completado(usuario, modulo)
+        desbloquear_siguiente_modulo(modulo, usuario):  # type: ignore
+        curso = modulo.curso
+        modulos = curso.modulos.order_by("orden")
+        lista = list(modulos)
+
+    if modulo in lista:
+        idx = lista.index(modulo)
+        if idx + 1 < len(lista):
+            siguiente = lista[idx+1]
+            ProgresoModulo.objects.get_or_create(
+                usuario=usuario,
+                modulo=siguiente
+            )

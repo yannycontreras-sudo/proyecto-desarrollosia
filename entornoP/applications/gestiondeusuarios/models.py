@@ -30,3 +30,12 @@ class User(AbstractUser):
 
     def is_admin_role(self):
         return self.role == self.Role.ADMIN
+    
+    def save(self, *args, **kwargs):
+        if not self.is_superuser:
+            if self.is_teacher() or self.is_admin_role():
+                self.is_staff = True
+            elif self.is_student():
+                self.is_staff = False
+
+        super().save(*args, **kwargs)

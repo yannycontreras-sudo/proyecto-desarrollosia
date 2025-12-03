@@ -11,35 +11,17 @@ from .views import (
     ModuloUpdateView,
     ContenidoCreateView,
     ContenidoUpdateView,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     modulo_toggle_publicacion_view,
-<<<<<<< HEAD
     FormularioDetailView,
     editar_preguntas_formulario,
-=======
->>>>>>> 266ffda57c5b6b47dfa36c4868d549fbeb9be11b
     crear_pregunta,
     editar_pregunta,
     ActualizarProgresoModulo,
+    responder_formulario,
+    crear_formulario,
+    respuestas_formulario,
 )
 
-=======
-    FormularioDetailView,
-    editar_preguntas_formulario,
-    crear_pregunta,
-    #editar_pregunta,
-    responder_formulario_view,
-)
->>>>>>> Stashed changes
-=======
-    FormularioDetailView,
-    editar_preguntas_formulario,
-    crear_pregunta,
-    #editar_pregunta,
-    responder_formulario_view,
-)
->>>>>>> Stashed changes
 
 app_name = "cursos"
 
@@ -53,31 +35,31 @@ urlpatterns = [
     path("<int:pk>/inscribirse/", inscribirse_curso_view, name="inscribirse"),
 
     # módulos
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    path("<int:curso_pk>/modulos/crear/",
-         ModuloCreateView.as_view(), name="modulo_crear"),
-    path("modulos/<int:pk>/editar/",
-         ModuloUpdateView.as_view(), name="modulo_editar"),
-    path("modulos/<int:pk>/toggle-publicacion/",
-         modulo_toggle_publicacion_view, name="modulo_toggle_publicacion"),
-=======
-=======
->>>>>>> Stashed changes
+
     path(
         "<int:curso_pk>/modulos/crear/",
-        ModuloCreateView.as_view(),
-        name="modulo_crear",
-    ),
+         ModuloCreateView.as_view(), 
+         name="modulo_crear",
+         ),
+
     path(
         "modulos/<int:pk>/editar/",
-        ModuloUpdateView.as_view(),
-        name="modulo_editar",
-    ),
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+         ModuloUpdateView.as_view(), 
+         name="modulo_editar",
+         ),
+
+    path(
+        "modulos/<int:pk>/toggle-publicacion/",
+         modulo_toggle_publicacion_view, 
+         name="modulo_toggle_publicacion",
+         ),
+
+    path(
+    "modulos/<int:modulo_id>/progreso/",
+         ActualizarProgresoModulo.as_view(), 
+         name="actualizar_progreso",
+         ),
+
 
     # contenidos
     path(
@@ -90,17 +72,17 @@ urlpatterns = [
         ContenidoUpdateView.as_view(),
         name="contenido_editar",
     ),
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        # formularios
-=======
+
+ 
 
     # formularios (docente)
->>>>>>> Stashed changes
-=======
 
-    # formularios (docente)
->>>>>>> Stashed changes
+    path(
+        "contenidos/<int:contenido_id>/formulario/crear/",
+        crear_formulario,
+        name="crear_formulario",
+    ),
+
     path(
         "formularios/<int:pk>/",
         FormularioDetailView.as_view(),
@@ -111,41 +93,31 @@ urlpatterns = [
         editar_preguntas_formulario,
         name="editar_preguntas_formulario",
     ),
-
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    path(
-        "pregunta/<int:pregunta_id>/editar/",
-        editar_pregunta,
-        name="editar_pregunta",
-    )
-
-    path("modulos/<int:modulo_id>/progreso/",
-         ActualizarProgresoModulo.as_view(), name="actualizar_progreso"),
-
-=======
-=======
->>>>>>> Stashed changes
-    # responder formulario (alumno)
-    path(
-        "formularios/<int:formulario_id>/responder/",
-        responder_formulario_view,
-        name="responder_formulario",
-    ),
-
-    # mantener estos si sigues usando las vistas antiguas
+   # mantener estos si sigues usando las vistas antiguas
     path(
         "formularios/<int:formulario_id>/preguntas/crear/",
         crear_pregunta,
         name="crear_pregunta",
     ),
-    #path(
-     #   "preguntas/<int:pregunta_id>/editar/",
-     #   editar_pregunta,
-     #   name="editar_pregunta",
-   # ),
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
+    path(
+        "pregunta/<int:pregunta_id>/editar/",
+        editar_pregunta,
+        name="editar_pregunta",
+    ),
+
+    #ver respuestas de un formulario (DOCENTE/ADMIN)
+    path(
+        "formularios/<int:formulario_id>/respuestas/",
+        respuestas_formulario,
+        name="respuestas_formulario",
+    ),
+
+
+    # responder formulario (alumno)
+    path(
+        "formularios/<int:formulario_id>/responder/",
+        responder_formulario,
+        name="responder_formulario",
+    ),
 ]

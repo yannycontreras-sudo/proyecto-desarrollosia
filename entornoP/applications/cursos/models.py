@@ -192,6 +192,17 @@ class Pregunta(models.Model):
         default=TIPO_SELECCION,
     )
 
+    respuesta_esperada = models.TextField(
+        blank=True,
+        help_text="Sol se usa si la pregunta es abierta.",
+    )
+
+    # opcional: tipo de pregunta
+    # tipo = models.CharField(
+    #     max_length=20,
+    #     choices=[("single", "Opción única"), ("multi", "Opción múltiple")]
+    # )
+
     class Meta:
         ordering = ["formulario", "orden"]
 
@@ -271,6 +282,7 @@ class ProgresoModulo(models.Model):
         unique_together = ("usuario", "modulo")
 
     def save(self, *args, **kwargs):
+
         if self.progreso >= 100:
             self.estado = "completado"
         super().save(*args, **kwargs)
@@ -320,7 +332,7 @@ def evaluar_modulo(sender, instance, created, **kwargs):
         usuario = instance.usuario
 
         marcar_modulo_completado(usuario, modulo)
-        desbloquear_siguiente_modulo(modulo, usuario):  # type: ignore
+        desbloquear_siguiente_modulo(modulo, usuario)  # type: ignore
         curso = modulo.curso
         modulos = curso.modulos.order_by("orden")
         lista = list(modulos)

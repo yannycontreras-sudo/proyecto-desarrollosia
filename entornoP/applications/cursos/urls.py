@@ -21,6 +21,7 @@ from .views import (
     crear_formulario,
     respuestas_formulario,
     resultado_formulario,
+    iniciar_simulacion,
 )
 
 
@@ -39,27 +40,27 @@ urlpatterns = [
 
     path(
         "<int:curso_pk>/modulos/crear/",
-         ModuloCreateView.as_view(), 
-         name="modulo_crear",
-         ),
+        ModuloCreateView.as_view(),
+        name="modulo_crear",
+    ),
 
     path(
         "modulos/<int:pk>/editar/",
-         ModuloUpdateView.as_view(), 
-         name="modulo_editar",
-         ),
+        ModuloUpdateView.as_view(),
+        name="modulo_editar",
+    ),
 
     path(
         "modulos/<int:pk>/toggle-publicacion/",
-         modulo_toggle_publicacion_view, 
-         name="modulo_toggle_publicacion",
-         ),
+        modulo_toggle_publicacion_view,
+        name="modulo_toggle_publicacion",
+    ),
 
     path(
-    "modulos/<int:modulo_id>/progreso/",
-         ActualizarProgresoModulo.as_view(), 
-         name="actualizar_progreso",
-         ),
+        "modulos/<int:modulo_id>/progreso/",
+        ActualizarProgresoModulo.as_view(),
+        name="actualizar_progreso",
+    ),
 
 
     # contenidos
@@ -74,7 +75,11 @@ urlpatterns = [
         name="contenido_editar",
     ),
 
- 
+    path(
+        "simulacion/<int:simulacion_id>/iniciar/",
+        iniciar_simulacion,
+        name="iniciar_simulacion"
+    ),
 
     # formularios (docente)
 
@@ -94,7 +99,7 @@ urlpatterns = [
         editar_preguntas_formulario,
         name="editar_preguntas_formulario",
     ),
-   # mantener estos si sigues usando las vistas antiguas
+    # mantener estos si sigues usando las vistas antiguas
     path(
         "formularios/<int:formulario_id>/preguntas/crear/",
         crear_pregunta,
@@ -107,7 +112,7 @@ urlpatterns = [
         name="editar_pregunta",
     ),
 
-    #ver respuestas de un formulario (DOCENTE/ADMIN)
+    # ver respuestas de un formulario (DOCENTE/ADMIN)
     path(
         "formularios/<int:formulario_id>/respuestas/",
         respuestas_formulario,
@@ -123,8 +128,8 @@ urlpatterns = [
     ),
     path(
         "formularios/<int:formulario_id>/resultado/",
-        resultado_formulario, 
+        resultado_formulario,
         name="resultado_formulario"
-        ),
+    ),
 
 ]

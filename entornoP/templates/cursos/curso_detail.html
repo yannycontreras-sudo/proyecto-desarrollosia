@@ -18,30 +18,33 @@
                 {{ curso.descripcion|default:"Este curso aún no tiene descripción." }}
             </p>
         </div>
+
         <div class="col-lg-4 text-lg-right">
 
-            {# BOTONES DOCENTE / ADMIN #}
-            {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
-                <a href="{% url 'cursos:editar' curso.pk %}" class="btn btn-outline-secondary mb-2">
-                    Editar curso
-                </a>
-                <a href="{% url 'cursos:modulo_crear' curso.pk %}" class="btn btn-primary mb-2">
-                    Crear módulo
-                </a>
+            {# BOTONES SOLO DOCENTE / ADMIN #}
+            {% if user.is_authenticated %}
+            {% if user.role == "teacher" or user.role == "admin" %}
+            <a href="{% url 'cursos:editar' curso.pk %}" class="btn btn-outline-secondary mb-2">
+                Editar curso
+            </a>
+            <a href="{% url 'cursos:modulo_crear' curso.pk %}" class="btn btn-primary mb-2">
+                Crear módulo
+            </a>
+            {% endif %}
             {% endif %}
 
             {# INSCRIPCIÓN ALUMNO #}
             {% if esta_inscrito %}
-                <span class="badge badge-success p-2 d-block mt-2">
-                    Ya estás inscrito en este curso
-                </span>
+            <span class="badge badge-success p-2 d-block mt-2">
+                Ya estás inscrito en este curso
+            </span>
             {% else %}
-                <form method="post" action="{% url 'cursos:inscribirse' curso.pk %}" class="mt-3">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">
-                        Inscribirme en este curso
-                    </button>
-                </form>
+            <form method="post" action="{% url 'cursos:inscribirse' curso.pk %}" class="mt-3">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    Inscribirme en este curso
+                </button>
+            </form>
             {% endif %}
         </div>
     </div>
@@ -52,204 +55,325 @@
             <h3 class="mb-3">Contenido del curso</h3>
 
             {% if modulos %}
-                <div class="accordion" id="modulosAccordion">
+            <div class="accordion" id="modulosAccordion">
 
-                    {% for modulo in modulos %}
-                        <div class="card mb-2">
+                {% for modulo in modulos %}
 
-                            <!-- ENCABEZADO DEL MÓDULO -->
-                            <div class="card-header d-flex justify-content-between align-items-center">
-
-                                <div>
-                                    <button class="btn btn-link p-0" type="button" data-toggle="collapse"
-                                            data-target="#mod{{ modulo.id }}" aria-expanded="false"
-                                            aria-controls="mod{{ modulo.id }}">
-                                        Módulo {{ forloop.counter }}: {{ modulo.titulo }}
-                                    </button>
-
-                                    {# Estado del módulo: Publicado / Oculto (solo docente/admin) #}
-                                    {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
-                                        {% if modulo.publicado %}
-                                            <span class="badge badge-success ml-2">Publicado</span>
-                                        {% else %}
-                                            <span class="badge badge-secondary ml-2">Oculto</span>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
-
-                                <div class="d-flex align-items-center">
-                                    {# BOTÓN EDITAR MÓDULO SOLO DOCENTE/ADMIN #}
-                                    {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
-                                        <a href="{% url 'cursos:modulo_editar' modulo.pk %}"
-                                           class="btn btn-sm btn-outline-secondary mr-2">
-                                            Editar módulo
-                                        </a>
-
-                                        <form method="post"
-                                              action="{% url 'cursos:modulo_toggle_publicacion' modulo.pk %}"
-                                              style="display:inline;">
-                                            {% csrf_token %}
-                                            {% if modulo.publicado %}
-                                                <button type="submit" class="btn btn-sm btn-warning">
-                                                    Ocultar
-                                                </button>
-                                            {% else %}
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    Publicar
-                                                </button>
-                                            {% endif %}
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <!-- CONTENIDO DEL MÓDULO -->
-                            <div id="mod{{ modulo.id }}"
-                                 class="collapse {% if forloop.first %}show{% endif %}"
-                                 data-parent="#modulosAccordion">
-                                <div class="card-body">
-
-                                    {# BOTÓN AÑADIR CONTENIDO (IMÁGENES/VIDEOS) SOLO DOCENTE/ADMIN #}
-                                    {% if user.is_authenticated and user.role == "teacher" or user.is_authenticated and user.role == "admin" %}
-                                        <a href="{% url 'cursos:contenido_crear' modulo.pk %}"
-                                           class="btn btn-sm btn-primary mb-3">
-                                            Añadir contenido
-                                        </a>
-                                    {% endif %}
-
-                                    {% if modulo.contenidos.all %}
-                                        <ul class="list-group list-group-flush">
-                                            {% for contenido in modulo.contenidos.all %}
-                                                <li class="list-group-item">
-
-                                                    <div class="d-flex justify-content-between align-items-start">
-                                                        <div class="mr-3">
-                                                            <strong>{{ contenido.titulo }}</strong><br>
-
-                                                            {# MOSTRAR IMAGEN O VIDEO #}
-                                                            {% if contenido.archivo %}
-                                                                {% if contenido.es_imagen %}
-                                                                    <img src="{{ contenido.archivo.url }}"
-                                                                         alt="{{ contenido.titulo }}"
-                                                                         class="img-fluid mt-2">
-                                                                {% elif contenido.es_video %}
-                                                                    <video controls class="mt-2" style="max-width:100%;">
-                                                                        <source src="{{ contenido.archivo.url }}" type="video/mp4">
-                                                                        Tu navegador no soporta la reproducción de video.
-                                                                    </video>
-                                                                {% else %}
-                                                                    <a href="{{ contenido.archivo.url }}" target="_blank" class="mt-2 d-inline-block">
-                                                                        Descargar archivo
-                                                                    </a>
-                                                                {% endif %}
-                                                            {% endif %}
-
-                                                            {% if contenido.descripcion %}
-                                                                <br>
-                                                                <small class="text-muted">
-                                                                    {{ contenido.descripcion }}
-                                                                </small>
-                                                            {% endif %}
-
-                                                            {% with contenido.formularios.all as forms_contenido %}
-
-                                                                {% if user.is_authenticated %}
-
-                                                                    {# ---- DOCENTE / ADMIN ---- #}
-                                                                    {% if user.role == "teacher" or user.role == "admin" %}
-
-                                                                        {% if forms_contenido %}
-                                                                            {% for formulario in forms_contenido %}
-                                                                                <div class="mt-2">
-                                                                                    <strong>Evaluación ligada a este contenido</strong><br>
-
-                                                                                    <a href="{% url 'cursos:editar_preguntas_formulario' formulario.pk %}"
-                                                                                       class="btn btn-sm btn-outline-secondary">
-                                                                                        Ver / editar preguntas
-                                                                                    </a>
-
-                                                                                    <a href="{% url 'cursos:respuestas_formulario' formulario.pk %}"
-                                                                                       class="btn btn-sm btn-outline-success">
-                                                                                        Ver respuestas
-                                                                                    </a>
-                                                                                </div>
-                                                                            {% endfor %}
-                                                                        {% else %}
-                                                                            <div class="mt-2">
-                                                                                <a href="{% url 'cursos:crear_formulario' contenido.pk %}"
-                                                                                   class="btn btn-sm btn-outline-primary">
-                                                                                    + Crear evaluación para este contenido
-                                                                                </a>
-                                                                            </div>
-                                                                        {% endif %}
-
-                                                                    {# ---- ESTUDIANTE INSCRITO ---- #}
-                                                                    {% elif user.role == "student" and esta_inscrito or user.role == "alumno" and esta_inscrito %}
-                                                                        {% if forms_contenido %}
-                                                                            {% for formulario in forms_contenido %}
-                                                                                <div class="mt-2">
-                                                                                    <a href="{% url 'cursos:responder_formulario' formulario.pk %}"
-                                                                                       class="btn btn-sm btn-primary">
-                                                                                        Responder evaluación
-                                                                                    </a>
-                                                                                </div>
-                                                                            {% endfor %}
-                                                                        {% endif %}
-                                                                    {% endif %}
-
-                                                                {% endif %}
-
-                                                            {% endwith %}
-
-                                                        </div>
-                                                    </div>
-
-                                                </li>
-                                            {% empty %}
-                                                <li class="list-group-item">
-                                                    <em class="text-muted">Este módulo aún no tiene contenidos.</em>
-                                                </li>
-                                            {% endfor %}
-                                        </ul>
-                                    {% else %}
-                                        <p class="text-muted">Este módulo aún no tiene contenidos.</p>
-                                    {% endif %}
-
-                                    {# FORMULARIO DE SIMULACIÓN LIGADO AL MÓDULO (SI EXISTE) #}
-                                    {% if modulo.simulacion and modulo.simulacion.formulario %}
-                                        {% with formulario=modulo.simulacion.formulario %}
-
-                                            {% if user.is_authenticated %}
-                                                {% if user.role == "teacher" or user.role == "admin" %}
-                                                    <div class="mt-3">
-                                                        <a href="{% url 'cursos:detalle_formulario' formulario.pk %}"
-                                                           class="btn btn-outline-secondary btn-sm">
-                                                            Ver / editar formulario de simulación
-                                                        </a>
-                                                    </div>
-                                                {% elif user.role == "student" and esta_inscrito or user.role == "alumno" and esta_inscrito %}
-                                                    <div class="mt-3">
-                                                        <a href="{% url 'cursos:responder_formulario' formulario.pk %}"
-                                                           class="btn btn-primary btn-sm">
-                                                            Responder evaluación de simulación
-                                                        </a>
-                                                    </div>
-                                                {% endif %}
-                                            {% endif %}
-
-                                        {% endwith %}
-                                    {% endif %}
-
-                                </div>
-                            </div>
+                {# ========== VERIFICAR SI ES ESTUDIANTE Y SI ESTÁ BLOQUEADO ========== #}
+                {% if user.role == "student" or user.role == "alumno" %}
+                {% if modulo.id in modulos_desbloqueados %}
+                {# ========== MÓDULO DESBLOQUEADO PARA ESTUDIANTE ========== #}
+                <div class="card mb-2 border-success">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                        <div>
+                            <button class="btn btn-link p-0 text-dark" type="button" data-toggle="collapse"
+                                data-target="#mod{{ modulo.id }}" aria-expanded="false"
+                                aria-controls="mod{{ modulo.id }}">
+                                <strong>Módulo {{ forloop.counter }}: {{ modulo.titulo }}</strong>
+                            </button>
+                            <span class="badge badge-success ml-2">
+                                <i class="fas fa-unlock"></i> Disponible
+                            </span>
                         </div>
-                    {% endfor %}
+                    </div>
 
+                    <div id="mod{{ modulo.id }}" class="collapse {% if forloop.first %}show{% endif %}"
+                        data-parent="#modulosAccordion">
+                        <div class="card-body">
+
+                            <ul class="list-group list-group-flush">
+                                {% for contenido in modulo.contenidos.all %}
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="mr-3">
+                                            <strong>{{ contenido.titulo }}</strong><br>
+
+                                            <!-- ARCHIVO -->
+                                            {% if contenido.archivo %}
+                                            {% if contenido.es_imagen %}
+                                            <img src="{{ contenido.archivo.url }}" alt="{{ contenido.titulo }}"
+                                                class="img-fluid mt-2" style="max-width: 400px;">
+
+                                            {% elif contenido.es_video %}
+                                            <video controls class="mt-2" style="max-width:100%;">
+                                                <source src="{{ contenido.archivo.url }}" type="video/mp4">
+                                                Tu navegador no soporta videos.
+                                            </video>
+
+                                            {% else %}
+                                            <a href="{{ contenido.archivo.url }}"
+                                                class="mt-2 d-inline-block btn btn-sm btn-outline-primary"
+                                                target="_blank">
+                                                <i class="fas fa-download"></i> Descargar archivo
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+
+                                            <!-- DESCRIPCIÓN -->
+                                            {% if contenido.descripcion %}
+                                            <br>
+                                            <small class="text-muted">
+                                                {{ contenido.descripcion }}
+                                            </small>
+                                            {% endif %}
+
+                                            <!-- FORMULARIOS LIGADOS (ESTUDIANTE) -->
+                                            {% with contenido.formularios.all as forms_contenido %}
+                                            {% if forms_contenido %}
+                                            {% for formulario in forms_contenido %}
+                                            <div class="mt-2">
+                                                <a href="{% url 'cursos:responder_formulario' formulario.pk %}"
+                                                    class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-clipboard-check"></i> Responder evaluación
+                                                </a>
+                                            </div>
+                                            {% endfor %}
+                                            {% endif %}
+                                            {% endwith %}
+
+                                        </div>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item">
+                                    <em class="text-muted">Este módulo aún no tiene contenidos.</em>
+                                </li>
+                                {% endfor %}
+                            </ul>
+
+                            <!-- SIMULACIÓN (ESTUDIANTE) -->
+                            {% if modulo.simulacion %}
+                            <div class="alert alert-info mt-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-gamepad"></i>
+                                            <strong>Simulación:</strong> {{ modulo.simulacion.nombre }}
+                                        </h6>
+                                        {% if modulo.simulacion.descripcion %}
+                                        <p class="mb-0 small text-muted">{{ modulo.simulacion.descripcion }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'cursos:iniciar_simulacion' modulo.simulacion.id %}"
+                                            class="btn btn-success btn-sm">
+                                            <i class="fas fa-play-circle"></i> Iniciar Simulación
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
                 </div>
+
+                {% else %}
+                {# ========== MÓDULO BLOQUEADO PARA ESTUDIANTE ========== #}
+                <div class="card mb-2 border-secondary" style="opacity: 0.6;">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted">
+                                <i class="fas fa-lock"></i>
+                                <strong>Módulo {{ forloop.counter }}: {{ modulo.titulo }}</strong>
+                            </span>
+                            <span class="badge badge-secondary ml-2">Bloqueado</span>
+                        </div>
+                    </div>
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-lock fa-3x text-secondary mb-3"></i>
+                        <p class="text-muted mb-1">
+                            <strong>Este módulo está bloqueado</strong>
+                        </p>
+                        <p class="text-muted small mb-0">
+                            Debes completar y aprobar el módulo anterior para acceder a este contenido.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% else %}
+                {# ========== VISTA PARA DOCENTE/ADMIN (VEN TODO) ========== #}
+                <div class="card mb-2">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <button class="btn btn-link p-0" type="button" data-toggle="collapse"
+                                data-target="#mod{{ modulo.id }}" aria-expanded="false"
+                                aria-controls="mod{{ modulo.id }}">
+                                Módulo {{ forloop.counter }}: {{ modulo.titulo }}
+                            </button>
+
+                            {% if user.is_authenticated %}
+                            {% if user.role == "teacher" or user.role == "admin" %}
+                            {% if modulo.publicado %}
+                            <span class="badge badge-success ml-2">Publicado</span>
+                            {% else %}
+                            <span class="badge badge-secondary ml-2">Oculto</span>
+                            {% endif %}
+                            {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex align-items-center">
+                            {% if user.is_authenticated %}
+                            {% if user.role == "teacher" or user.role == "admin" %}
+                            <a href="{% url 'cursos:modulo_editar' modulo.pk %}"
+                                class="btn btn-sm btn-outline-secondary mr-2">
+                                Editar módulo
+                            </a>
+
+                            <form method="post" action="{% url 'cursos:modulo_toggle_publicacion' modulo.pk %}"
+                                style="display:inline;">
+                                {% csrf_token %}
+                                {% if modulo.publicado %}
+                                <button type="submit" class="btn btn-sm btn-warning">Ocultar</button>
+                                {% else %}
+                                <button type="submit" class="btn btn-sm btn-success">Publicar</button>
+                                {% endif %}
+                            </form>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div id="mod{{ modulo.id }}" class="collapse {% if forloop.first %}show{% endif %}"
+                        data-parent="#modulosAccordion">
+                        <div class="card-body">
+
+                            {% if user.is_authenticated %}
+                            {% if user.role == "teacher" or user.role == "admin" %}
+                            <a href="{% url 'cursos:contenido_crear' modulo.pk %}" class="btn btn-sm btn-primary mb-3">
+                                Añadir contenido
+                            </a>
+                            {% endif %}
+                            {% endif %}
+
+                            <ul class="list-group list-group-flush">
+                                {% for contenido in modulo.contenidos.all %}
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="mr-3">
+                                            <strong>{{ contenido.titulo }}</strong><br>
+
+                                            <!-- ARCHIVO -->
+                                            {% if contenido.archivo %}
+                                            {% if contenido.es_imagen %}
+                                            <img src="{{ contenido.archivo.url }}" alt="{{ contenido.titulo }}"
+                                                class="img-fluid mt-2">
+
+                                            {% elif contenido.es_video %}
+                                            <video controls class="mt-2" style="max-width:100%;">
+                                                <source src="{{ contenido.archivo.url }}" type="video/mp4">
+                                                Tu navegador no soporta videos.
+                                            </video>
+
+                                            {% else %}
+                                            <a href="{{ contenido.archivo.url }}" class="mt-2 d-inline-block"
+                                                target="_blank">
+                                                Descargar archivo
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+
+                                            <!-- DESCRIPCIÓN -->
+                                            {% if contenido.descripcion %}
+                                            <br>
+                                            <small class="text-muted">
+                                                {{ contenido.descripcion }}
+                                            </small>
+                                            {% endif %}
+
+                                            <!-- FORMULARIOS LIGADOS (DOCENTE) -->
+                                            {% with contenido.formularios.all as forms_contenido %}
+                                            {% if user.is_authenticated %}
+                                            {% if user.role == "teacher" or user.role == "admin" %}
+                                            {% if forms_contenido %}
+                                            {% for formulario in forms_contenido %}
+                                            <div class="mt-2">
+                                                <strong>Evaluación ligada</strong><br>
+
+                                                <a href="{% url 'cursos:editar_preguntas_formulario' formulario.pk %}"
+                                                    class="btn btn-sm btn-outline-secondary">
+                                                    Ver / editar preguntas
+                                                </a>
+
+                                                <a href="{% url 'cursos:respuestas_formulario' formulario.pk %}"
+                                                    class="btn btn-sm btn-outline-success">
+                                                    Respuestas
+                                                </a>
+                                            </div>
+                                            {% endfor %}
+                                            {% else %}
+                                            <div class="mt-2">
+                                                <a href="{% url 'cursos:crear_formulario' contenido.pk %}"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    + Crear evaluación
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                            {% endif %}
+                                            {% endif %}
+                                            {% endwith %}
+
+                                        </div>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item">
+                                    <em class="text-muted">Este módulo aún no tiene contenidos.</em>
+                                </li>
+                                {% endfor %}
+                            </ul>
+
+                            <!-- SIMULACIÓN (DOCENTE) -->
+                            {% if modulo.simulacion %}
+                            <div class="alert alert-info mt-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-gamepad"></i>
+                                            <strong>Simulación:</strong> {{ modulo.simulacion.nombre }}
+                                        </h6>
+                                        {% if modulo.simulacion.descripcion %}
+                                        <p class="mb-0 small text-muted">{{ modulo.simulacion.descripcion }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if user.is_authenticated %}
+                                        {% if user.role == "teacher" or user.role == "admin" %}
+                                        {% if modulo.simulacion.formulario %}
+                                        <a href="{% url 'cursos:detalle_formulario' modulo.simulacion.formulario.pk %}"
+                                            class="btn btn-outline-secondary btn-sm mr-1">
+                                            Editar
+                                        </a>
+                                        <a href="{% url 'cursos:respuestas_formulario' modulo.simulacion.formulario.pk %}"
+                                            class="btn btn-outline-success btn-sm">
+                                            Respuestas
+                                        </a>
+                                        {% else %}
+                                        <span class="badge badge-warning">Sin formulario</span>
+                                        {% endif %}
+                                        {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% endfor %}
+
+            </div>
             {% else %}
-                <p class="text-muted">Este curso aún no tiene módulos creados.</p>
+            <p class="text-muted">Este curso aún no tiene módulos creados.</p>
             {% endif %}
+
         </div>
     </div>
+
 </div>
 {% endblock content %}

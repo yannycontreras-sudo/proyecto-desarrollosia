@@ -60,7 +60,7 @@ class CursoDetailView(DetailView):
         curso = self.object
         user = self.request.user
 
-        # Todos los módulos del curso
+        # Todos los módulos del curso ordenados
         modulos = (
             Modulo.objects
             .filter(curso=curso)
@@ -68,8 +68,7 @@ class CursoDetailView(DetailView):
             .prefetch_related("contenidos")
         )
 
-        # 👇 Si es alumno (role == "student"), solo ve módulos publicados
-        # Docentes/admin/superuser ven todos
+        # Si es alumno, solo ve módulos publicados
         if getattr(user, "role", None) in ["student", "alumno"] and not user.is_superuser:
             modulos = modulos.filter(publicado=True)
 
@@ -79,7 +78,49 @@ class CursoDetailView(DetailView):
             curso=curso
         ).exists()
 
+        # 👇 NUEVO: Calcular módulos desbloqueados para estudiantes
+        if getattr(user, "role", None) in ["student", "alumno"]:
+            modulos_desbloqueados = self.obtener_modulos_desbloqueados(
+                user, modulos)
+            context["modulos_desbloqueados"] = modulos_desbloqueados
+        else:
+            # Docentes/admin ven todos los módulos como desbloqueados
+            context["modulos_desbloqueados"] = [m.id for m in modulos]
+
         return context
+
+    def obtener_modulos_desbloqueados(self, usuario, modulos):
+        """
+        Devuelve lista de IDs de módulos que el estudiante puede acceder.
+        El primer módulo siempre está desbloqueado.
+        Los demás se desbloquean al completar el anterior.
+        """
+        modulos_list = list(modulos)
+        if not modulos_list:
+            return []
+
+        desbloqueados = []
+
+        for idx, modulo in enumerate(modulos_list):
+            if idx == 0:
+                # El primer módulo siempre está desbloqueado
+                desbloqueados.append(modulo.id)
+            else:
+                # Verificar si completó el módulo anterior
+                modulo_anterior = modulos_list[idx - 1]
+                progreso_anterior = ProgresoModulo.objects.filter(
+                    usuario=usuario,
+                    modulo=modulo_anterior,
+                    estado="completado"
+                ).exists()
+
+                if progreso_anterior:
+                    desbloqueados.append(modulo.id)
+                else:
+                    # Si no completó el anterior, los siguientes tampoco están desbloqueados
+                    break
+
+        return desbloqueados
 
 
 @login_required
@@ -705,3 +746,47 @@ def resultado_formulario(request, formulario_id):
         "evaluacion": evaluacion,
         "respuestas": respuestas,
     })
+
+
+@login_required
+def iniciar_simulacion(request, simulacion_id):
+    """
+    Vista para que el ESTUDIANTE inicie una simulación.
+    Crea una evaluación y redirige al formulario para responder.
+    """
+    simulacion = get_object_or_404(Simulacion, id=simulacion_id)
+    usuario = request.user
+
+    # Verificar que sea estudiante
+    if getattr(usuario, "role", None) not in ["student", "alumno"] and not usuario.is_superuser:
+        return HttpResponseForbidden("Solo los estudiantes pueden iniciar simulaciones.")
+
+    # Verificar que esté inscrito en el curso
+    modulo = simulacion.modulo
+    curso = modulo.curso
+
+    if not Inscripcion.objects.filter(usuario=usuario, curso=curso).exists():
+        messages.error(request, "No estás inscrito en este curso.")
+        return redirect("cursos:detalle", pk=curso.pk)
+
+    # Verificar que el módulo esté publicado
+    if not modulo.publicado:
+        messages.error(request, "Este módulo no está disponible aún.")
+        return redirect("cursos:detalle", pk=curso.pk)
+
+    # Verificar que la simulación tenga un formulario asociado
+    if not hasattr(simulacion, 'formulario') or not simulacion.formulario:
+        messages.error(
+            request, "Esta simulación no tiene un formulario configurado.")
+        return redirect("cursos:detalle", pk=curso.pk)
+
+    formulario = simulacion.formulario
+
+    # Verificar si ya respondió este formulario
+    if Evaluacion.objects.filter(usuario=usuario, formulario=formulario).exists():
+        messages.info(request, "Ya has realizado esta simulación.")
+        return redirect("cursos:resultado_formulario", formulario_id=formulario.id)
+
+    # Redirigir a responder el formulario
+    messages.success(request, f"Simulación '{simulacion.nombre}' iniciada.")
+    return redirect("cursos:responder_formulario", formulario_id=formulario.id)

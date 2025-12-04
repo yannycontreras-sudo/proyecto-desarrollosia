@@ -20,14 +20,14 @@ from .models import (
     Curso,
     Modulo,
     Contenido,
-    Formulario, 
+    Formulario,
     Pregunta,
     Evaluacion,
     OpcionRespuesta,
     RespuestaAlumno,
     Inscripcion,
     ProgresoModulo,
-    )
+)
 
 
 from django.urls import reverse_lazy
@@ -37,10 +37,6 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
-
-
-
 
 
 # CURSOS
@@ -280,12 +276,10 @@ class FormularioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         return context
 
 
-
-
 # ======================================
 # EDITAR VARIAS PREGUNTAS DEL FORMULARIO
 # ======================================
-    
+
 @login_required
 def editar_preguntas_formulario(request, formulario_id):
     """
@@ -316,7 +310,8 @@ def editar_preguntas_formulario(request, formulario_id):
 
                 orden = form.cleaned_data.get("orden") or 1
                 tipo = form.cleaned_data.get("tipo")
-                respuesta_esperada = (form.cleaned_data.get("respuesta_esperada") or "").strip()
+                respuesta_esperada = (form.cleaned_data.get(
+                    "respuesta_esperada") or "").strip()
 
                 # Creamos la pregunta
                 pregunta = Pregunta.objects.create(
@@ -331,7 +326,8 @@ def editar_preguntas_formulario(request, formulario_id):
                 if tipo == Pregunta.TIPO_SELECCION:
                     opciones = []
                     for i in range(1, 5):
-                        op_text = (form.cleaned_data.get(f"opcion_{i}") or "").strip()
+                        op_text = (form.cleaned_data.get(
+                            f"opcion_{i}") or "").strip()
                         es_corr = form.cleaned_data.get(f"correcta_{i}", False)
                         if op_text:
                             opciones.append((op_text, es_corr))
@@ -349,7 +345,8 @@ def editar_preguntas_formulario(request, formulario_id):
                                 es_correcta=es_corr,
                             )
 
-            messages.success(request, "Preguntas del formulario actualizadas correctamente.")
+            messages.success(
+                request, "Preguntas del formulario actualizadas correctamente.")
             return redirect("cursos:detalle_formulario", formulario.id)
 
     else:
@@ -383,7 +380,6 @@ def editar_preguntas_formulario(request, formulario_id):
     )
 
 
-
 # preguntas
 
 
@@ -405,7 +401,7 @@ def crear_pregunta(request, formulario_id):
 
             opciones = formset.save(commit=False)
 
-            tiene_correcta = any(o.es_correcta 
+            tiene_correcta = any(o.es_correcta
                                  for o in opciones)
             if not tiene_correcta:
                 formset, forms[0].add_error(
@@ -495,7 +491,8 @@ def responder_formulario(request, formulario_id):
     )
 
     if not preguntas:
-        messages.info(request, "Este formulario aún no tiene preguntas configuradas.")
+        messages.info(
+            request, "Este formulario aún no tiene preguntas configuradas.")
         return redirect("cursos:detalle_formulario", pk=formulario.id)
 
     if request.method == "POST":
@@ -560,7 +557,8 @@ def responder_formulario(request, formulario_id):
                     correctas += 1
 
             # calcular puntaje (0-100%) considerando TODAS las preguntas
-            puntaje = (correctas / total_preguntas) * 100 if total_preguntas > 0 else 0
+            puntaje = (correctas / total_preguntas) * \
+                100 if total_preguntas > 0 else 0
             evaluacion.puntaje = puntaje
 
             # Regla de aprobación: 60% o más (se puede cambiar)
@@ -621,7 +619,6 @@ def respuestas_formulario(request, formulario_id):
     )
 
 
-
 class ActualizarProgresoModulo(APIView):
 
     def post(self, request, modulo_id):
@@ -644,13 +641,16 @@ class ActualizarProgresoModulo(APIView):
             "progreso": progreso.progreso,
             "estado": progreso.estado,
         })
+
+
 @login_required
-def crear_formulario(request,contenido_id):
+def crear_formulario(request, contenido_id):
     contenido = get_object_or_404(Contenido, pk=contenido_id)
 
-    #solo docente/admin pueden crear Formulario
+    # Solo docente/admin pueden crear Formulario
     if request.user.role not in ["teacher", "admin"]:
         return redirect("cursos:detalle", pk=contenido.modulo.curso.pk)
+
     if request.method == "POST":
         form = FormularioForm(request.POST)
         if form.is_valid():
@@ -658,13 +658,19 @@ def crear_formulario(request,contenido_id):
             formulario.contenido = contenido
             formulario.save()
             return redirect("cursos:editar_preguntas_formulario", formulario.pk)
-        else:
-            form = FormularioForm()
-        return render(request, "cursos/formulario_form.html",{
-            "form":form,
+    else:
+        form = FormularioForm()
+
+    return render(
+        request,
+        "cursos/formulario_form.html",
+        {
+            "form": form,
             "contenido": contenido,
-        })
-    
+        }
+    )
+
+
 def es_similar(texto_ref, texto_alumno, umbral=0.7):
     """
     compara si la respuesta del alumno es 'parecida' a la respuesta esperada.

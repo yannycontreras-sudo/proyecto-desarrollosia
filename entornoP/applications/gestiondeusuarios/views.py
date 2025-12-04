@@ -11,6 +11,10 @@ def registro_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            # Opcional: si quieres que el alumno registrado vaya a sus cursos:
+            role = getattr(user, "role", None)
+            if role in ["student", "alumno"]:
+                return redirect("cursos:mis_cursos")
             return redirect("core:home")
     else:
         form = RegistroForm()
@@ -20,28 +24,32 @@ def registro_view(request):
 
 def login_view(request):
     if request.method == "POST":
-        form =LoginForm(request, data=request.POST)
+        form = LoginForm(request, data=request.POST)
         if form.is_valid():
-            user =form.get_user()
+            user = form.get_user()
             login(request, user)
 
-
-#si venia desde una pagina protegida, respeta ?next=
+            # si venía desde una página protegida, respeta ?next=
             next_url = request.GET.get("next")
             if next_url:
                 return redirect(next_url)
-# si no hay 'next=, redirige segun el rol
-            role= getattr(user, "role", None)
 
-            if role == "student":
-#aqui lo mandamos directo a sus cursos
+            # si no hay 'next=', redirige según el rol
+            role = getattr(user, "role", None)
+
+            # Alumno → directo a sus cursos
+            if role in ["student", "alumno"]:
                 return redirect("cursos:mis_cursos")
-            elif role == "teacher":
-#docente a la lista de cursos 
+
+            # Docente → lista de cursos
+            elif role in ["teacher", "docente"]:
                 return redirect("cursos:lista")
-            elif role == "admin":
-#admin al home 
+
+            # Admin → home
+            elif role in ["admin", "administrador"]:
                 return redirect("core:home")
+
+            # Si por alguna razón no tiene rol conocido
             return redirect("core:home")
         else:
             messages.error(request, "Usuario o contraseña incorrecta.")

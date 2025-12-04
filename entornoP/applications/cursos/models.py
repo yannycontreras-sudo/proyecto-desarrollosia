@@ -3,7 +3,6 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
 
@@ -194,14 +193,8 @@ class Pregunta(models.Model):
 
     respuesta_esperada = models.TextField(
         blank=True,
-        help_text="Sol se usa si la pregunta es abierta.",
+        help_text="Solo se usa si la pregunta es abierta.",
     )
-
-    # opcional: tipo de pregunta
-    # tipo = models.CharField(
-    #     max_length=20,
-    #     choices=[("single", "Opción única"), ("multi", "Opción múltiple")]
-    # )
 
     class Meta:
         ordering = ["formulario", "orden"]
@@ -246,7 +239,7 @@ class RespuestaAlumno(models.Model):
 
 
 # ============================================================
-# PROGRESO DEL MÓDULO (AUTOMÁTICO)
+# PROGRESO DEL MÓDULO
 # ============================================================
 
 class ProgresoModulo(models.Model):
@@ -275,14 +268,13 @@ class ProgresoModulo(models.Model):
         default="pendiente",
     )
 
-    progreso = models.PositiveIntegerField(default=0)  # 0–100%
+    progreso = models.PositiveIntegerField(default=0)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ("usuario", "modulo")
 
     def save(self, *args, **kwargs):
-
         if self.progreso >= 100:
             self.estado = "completado"
         super().save(*args, **kwargs)
@@ -320,28 +312,32 @@ def desbloquear_siguiente_modulo(modulo, usuario):
 
 
 # ============================================================
-# SEÑAL: CUANDO EL ALUMNO APRUEBA UN EXAMEN
+# SEÑAL DE APROBACIÓN DE EVALUACIÓN (CORREGIDA)
 # ============================================================
 
 @receiver(post_save, sender=Evaluacion)
 def evaluar_modulo(sender, instance, created, **kwargs):
-    if instance.aprobado:
-        formulario = instance.formulario
-        contenido = formulario.contenido
-        modulo = contenido.modulo
-        usuario = instance.usuario
+    """
+    Cuando el alumno aprueba una Evaluacion se marca el módulo como completado
+    y se desbloquea el siguiente módulo.
+    """
 
-        marcar_modulo_completado(usuario, modulo)
-        desbloquear_siguiente_modulo(modulo, usuario)  # type: ignore
-        curso = modulo.curso
-        modulos = curso.modulos.order_by("orden")
-        lista = list(modulos)
+    # Si no está aprobado ⇒ no hacemos nada
+    if not instance.aprobado:
+        return
 
-    if modulo in lista:
-        idx = lista.index(modulo)
-        if idx + 1 < len(lista):
-            siguiente = lista[idx+1]
-            ProgresoModulo.objects.get_or_create(
-                usuario=usuario,
-                modulo=siguiente
-            )
+    formulario = instance.formulario
+
+    # El formulario SIEMPRE debe tener contenido. Si no, no se puede avanzar.
+    contenido = getattr(formulario, "contenido", None)
+    if contenido is None:
+        return
+
+    modulo = contenido.modulo
+    usuario = instance.usuario
+
+    # Marca módulo como completado
+    marcar_modulo_completado(usuario, modulo)
+
+    # Desbloquea el siguiente módulo
+    desbloquear_siguiente_modulo(modulo, usuario)

@@ -1,0 +1,42 @@
+{% extends "home.html" %}
+
+{% block title %}Resultado de evaluación{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+
+    <h1 class="mb-4">Resultado de la evaluación</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4>Puntaje obtenido: {{ evaluacion.puntaje|floatformat:2 }}%</h4>
+
+            {% if evaluacion.aprobado %}
+                <span class="badge badge-success">APROBADO</span>
+            {% else %}
+                <span class="badge badge-danger">REPROBADO</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <h3>Respuestas</h3>
+    <ul class="list-group">
+        {% for r in respuestas %}
+            <li class="list-group-item">
+                <strong>{{ r.pregunta.texto }}</strong><br>
+
+                {% if r.pregunta.tipo == "A" %}
+                    <em>Tu respuesta:</em> {{ r.respuesta_texto }}
+                {% else %}
+                    <em>Tu respuesta:</em> {{ r.opcion.texto }}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'cursos:detalle_formulario' formulario.pk %}" class="btn btn-secondary mt-4">
+        Volver al formulario
+    </a>
+
+</div>
+{% endblock content %}

@@ -35,7 +35,7 @@ class RegistroForm(UserCreationForm):
         # llamamos a UserCreationForm.save() pero SIN guardar todavía
         user = super().save(commit=False)
         # 👇 rol fijo para todos los que se registran por el front
-        user.role = "student"   # o el valor que uses internamente para "Alumno"
+        user.role = "alumno"   # o el valor que uses internamente para "Alumno"
         if commit:
             user.save()
         return user

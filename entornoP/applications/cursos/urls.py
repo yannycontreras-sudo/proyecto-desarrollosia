@@ -20,6 +20,7 @@ from .views import (
     responder_formulario,
     crear_formulario,
     respuestas_formulario,
+    resultado_formulario,
 )
 
 
@@ -120,4 +121,10 @@ urlpatterns = [
         responder_formulario,
         name="responder_formulario",
     ),
+    path(
+        "formularios/<int:formulario_id>/resultado/",
+        resultado_formulario, 
+        name="resultado_formulario"
+        ),
+
 ]

@@ -70,7 +70,7 @@ class CursoDetailView(DetailView):
 
         # 👇 Si es alumno (role == "student"), solo ve módulos publicados
         # Docentes/admin/superuser ven todos
-        if getattr(user, "role", None) == "student" and not user.is_superuser:
+        if getattr(user, "role", None) in ["student", "alumno"] and not user.is_superuser:
             modulos = modulos.filter(publicado=True)
 
         context["modulos"] = modulos
@@ -473,14 +473,14 @@ def responder_formulario(request, formulario_id):
     formulario = get_object_or_404(Formulario, id=formulario_id)
     usuario = request.user
 
-    # Solo alumnos (role=student) o superuser
-    if getattr(usuario, "role", None) != "student" and not usuario.is_superuser:
+    # Acepta estudiantes creados como "student" o "alumno"
+    if getattr(usuario, "role", None) not in ["student", "alumno"] and not usuario.is_superuser:
         return HttpResponseForbidden("Solo los alumnos pueden responder este formulario.")
 
     # Evitar que responda dos veces
     if Evaluacion.objects.filter(usuario=usuario, formulario=formulario).exists():
         messages.info(request, "Ya has respondido este formulario.")
-        return redirect("cursos:detalle_formulario", pk=formulario.id)
+        return redirect("cursos:resultado_formulario", formulario_id=formulario.id)
 
     # Traer preguntas del formulario
     preguntas = (
@@ -683,3 +683,25 @@ def es_similar(texto_ref, texto_alumno, umbral=0.7):
 
     ratio = SequenceMatcher(None, texto_ref, texto_alumno).ratio()
     return ratio >= umbral
+
+
+@login_required
+def resultado_formulario(request, formulario_id):
+    usuario = request.user
+    formulario = get_object_or_404(Formulario, id=formulario_id)
+
+    try:
+        evaluacion = Evaluacion.objects.get(
+            usuario=usuario, formulario=formulario)
+    except Evaluacion.DoesNotExist:
+        messages.error(request, "Aún no has respondido este formulario.")
+        return redirect("cursos:detalle_formulario", pk=formulario.id)
+
+    respuestas = RespuestaAlumno.objects.filter(
+        evaluacion=evaluacion).select_related("pregunta", "opcion")
+
+    return render(request, "cursos/resultado_formulario.html", {
+        "formulario": formulario,
+        "evaluacion": evaluacion,
+        "respuestas": respuestas,
+    })

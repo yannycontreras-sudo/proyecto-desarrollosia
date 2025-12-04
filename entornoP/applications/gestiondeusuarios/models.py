@@ -8,7 +8,7 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     class Role(models.TextChoices):
-        STUDENT = "student", "Alumno"
+        STUDENT = "alumno", "Alumno"
         TEACHER = "teacher", "Docente"
         ADMIN = "admin", "Administrador"
 

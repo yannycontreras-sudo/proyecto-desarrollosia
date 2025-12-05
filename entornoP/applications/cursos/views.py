@@ -1,8 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
+from django.contrib.auth import get_user_model
+from django.db.models import Avg
+import csv
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from difflib import SequenceMatcher
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
 
 
 from .forms import (
@@ -29,14 +40,7 @@ from .models import (
     ProgresoModulo,
 )
 
-
-from django.urls import reverse_lazy
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+User= get_user_model()
 
 
 # CURSOS
@@ -658,6 +662,135 @@ def respuestas_formulario(request, formulario_id):
             "evaluaciones": evaluaciones,
         },
     )
+# ======================================
+# REPORTES DE DESEMPEÑO (DOCENTE / ADMIN)
+# ======================================
+
+@login_required
+def reportes_desempeno(request):
+    """
+    Vista para que DOCENTES / ADMIN vean reportes de progreso y rendimiento.
+    Incluye filtros y datos para gráficos.
+    """
+    user = request.user
+    if getattr(user, "role", None) not in ("teacher", "admin") and not user.is_superuser:
+        return HttpResponseForbidden("Solo docentes o administradores pueden ver reportes.")
+
+    curso_id = request.GET.get("curso")
+    docente_id = request.GET.get("docente")
+    periodo = request.GET.get("periodo")
+
+    # Base: todas las evaluaciones con relaciones necesarias
+    evaluaciones = (
+        Evaluacion.objects
+        .select_related(
+            "usuario",
+            "formulario",
+            "formulario__contenido__modulo__curso",
+        )
+        .all()
+    )
+
+    # ---- filtros ----
+    if curso_id:
+        evaluaciones = evaluaciones.filter(
+            formulario__contenido__modulo__curso_id=curso_id
+        )
+
+    if docente_id:
+        # Ojo: aquí asumo que Curso tiene un M2M "docentes"
+        # si en tu modelo se llama distinto, cambia "docentes"
+        evaluaciones = evaluaciones.filter(
+            formulario__contenido__modulo__curso__docentes__id=docente_id
+        )
+
+    if periodo:
+        # EJEMPLO: si tu "periodo" es el año (2024, 2025, etc.)
+        # Ajusta esto según cómo lo guardes en tu modelo
+        evaluaciones = evaluaciones.filter(fecha__year=periodo)
+
+    # Agregar promedio de puntaje por curso (para el gráfico)
+    datos_por_curso = (
+        evaluaciones
+        .values(
+            "formulario__contenido__modulo__curso__id",
+            "formulario__contenido__modulo__curso__nombre",
+        )
+        .annotate(promedio_puntaje=Avg("puntaje"))
+        .order_by("formulario__contenido__modulo__curso__nombre")
+    )
+
+    etiquetas = [
+        d["formulario__contenido__modulo__curso__nombre"]
+        for d in datos_por_curso
+    ]
+    promedios = [
+        float(d["promedio_puntaje"] or 0) for d in datos_por_curso
+    ]
+
+    cursos = Curso.objects.all()
+    docentes = User.objects.filter(role="teacher")
+
+    context = {
+        "cursos": cursos,
+        "docentes": docentes,
+        "etiquetas": etiquetas,
+        "promedios": promedios,
+        "evaluaciones": evaluaciones,
+    }
+    return render(request, "cursos/reportes_desempeno.html", context)
+
+
+@login_required
+def exportar_reporte_csv(request):
+    """
+    Exporta el mismo reporte anterior a CSV.
+    Usa los mismos filtros (curso, docente, periodo).
+    """
+    user = request.user
+    if getattr(user, "role", None) not in ("teacher", "admin") and not user.is_superuser:
+        return HttpResponseForbidden("Solo docentes o administradores pueden exportar reportes.")
+
+    curso_id = request.GET.get("curso")
+    docente_id = request.GET.get("docente")
+    periodo = request.GET.get("periodo")
+
+    evaluaciones = (
+        Evaluacion.objects
+        .select_related(
+            "usuario",
+            "formulario",
+            "formulario__contenido__modulo__curso",
+        )
+        .all()
+    )
+
+    if curso_id:
+        evaluaciones = evaluaciones.filter(
+            formulario__contenido__modulo__curso_id=curso_id
+        )
+
+    if docente_id:
+        evaluaciones = evaluaciones.filter(
+            formulario__contenido__modulo__curso__docentes__id=docente_id
+        )
+
+    if periodo:
+        evaluaciones = evaluaciones.filter(fecha__year=periodo)
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = "attachment; filename=reporte_desempeno.csv"
+
+    writer = csv.writer(response)
+    writer.writerow(["Curso", "Alumno", "Puntaje", "Fecha"])
+
+    for e in evaluaciones:
+        curso = e.formulario.contenido.modulo.curso
+        alumno = e.usuario.get_full_name() or e.usuario.username
+        fecha_str = e.fecha.strftime("%Y-%m-%d") if hasattr(e, "fecha") and e.fecha else ""
+        writer.writerow([curso.nombre, alumno, e.puntaje, fecha_str])
+
+    return response
 
 
 class ActualizarProgresoModulo(APIView):

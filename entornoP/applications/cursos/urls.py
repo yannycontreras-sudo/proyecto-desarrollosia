@@ -22,6 +22,9 @@ from .views import (
     respuestas_formulario,
     resultado_formulario,
     iniciar_simulacion,
+    reportes_desempeno,
+    exportar_reporte_csv,
+
 )
 
 
@@ -131,5 +134,24 @@ urlpatterns = [
         resultado_formulario,
         name="resultado_formulario"
     ),
+   
+    # ... tus otras rutas ...
+
+    path(
+        "reportes/",
+        reportes_desempeno, 
+        name="reportes_desempeno"
+        ),
+
+    path("reportes/csv/",
+        exportar_reporte_csv, 
+        name="exportar_reporte_csv"
+        ),
+
+
+    # si luego hacemos PDF:
+    # path("reportes/pdf/", views.exportar_reporte_pdf, name="exportar_reporte_pdf"),
+
+
 
 ]

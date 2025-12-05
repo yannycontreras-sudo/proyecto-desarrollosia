@@ -81,7 +81,7 @@
                     <a href="{% url 'cursos:lista' %}" class="nav-item nav-link">Cursos</a>
 
                     {% if user.is_authenticated and user.role == 'student' %}
-                    <a href = "{% url 'cursos:mis_cursos' %}" class="nav-item nav-link">Mis cursos</a>
+                    <a href="{% url 'cursos:mis_cursos' %}" class="nav-item nav-link">Mis cursos</a>
                     {% endif %}
 
                     {# Botón "Crear curso" solo para docentes o admin #}
@@ -92,6 +92,17 @@
                     {% elif user.is_authenticated and user.role == 'admin' %}
                     <a href="{% url 'cursos:crear' %}" class="nav-item nav-link">
                         Crear curso
+                    </a>
+                    {% endif %}
+
+                    {# NUEVO: Reportes académicos solo para teacher / admin #}
+                    {% if user.is_authenticated and user.role == 'teacher' %}
+                    <a href="{% url 'cursos:reportes_desempeno' %}" class="nav-item nav-link">
+                        Reportes académicos
+                    </a>
+                    {% elif user.is_authenticated and user.role == 'admin' %}
+                    <a href="{% url 'cursos:reportes_desempeno' %}" class="nav-item nav-link">
+                        Reportes académicos
                     </a>
                     {% endif %}
 
@@ -203,8 +214,6 @@
             </div>
         </div>
     </div>
-
-    {# Aquí puedes seguir pegando las secciones de Features, Courses, Team, Testimonial, Contact, etc. #}
 
     {% endblock content %}
     {# =================== FIN CONTENIDO VARIABLE =================== #}

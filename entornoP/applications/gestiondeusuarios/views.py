@@ -39,7 +39,7 @@ def login_view(request):
 
             # Alumno → directo a sus cursos
             if role in ["student", "alumno"]:
-                return redirect("cursos:mis_cursos")
+                return redirect("core:home")
 
             # Docente → lista de cursos
             elif role in ["teacher", "docente"]:

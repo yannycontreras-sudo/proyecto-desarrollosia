@@ -1,38 +1,80 @@
 {% extends "home.html" %}
+{% load static %}
+{% load widget_tweaks %}
 
-{% block title %}Crear curso{% endblock title %}
+{% block title %}Crear curso | EduSalud UCN{% endblock title %}
 
 {% block content %}
+
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-6">
+        <div class="col-lg-8">
 
-            <h1 class="mb-4">Crear nuevo curso</h1>
+            <!-- Encabezado -->
+            <div class="text-center mb-4">
+                <h1 class="display-5 mb-2">Crear nuevo curso</h1>
+                <p class="text-muted">
+                    Define el nombre y la descripción del curso que estará disponible en el Campus Virtual EduSalud UCN.
+                </p>
+            </div>
 
-            <form method="post">
-                {% csrf_token %}
+            <!-- Tarjeta del formulario -->
+            <div class="card shadow-sm border-0 rounded-lg">
+                <div class="card-body p-4">
 
-                {% for field in form %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                            <small class="form-text text-muted">{{ field.help_text }}</small>
-                        {% endif %}
-                        {% if field.errors %}
-                            <div class="text-danger small">
-                                {{ field.errors|striptags }}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% for field in form %}
+                            <div class="form-group mb-3">
+                                <label for="{{ field.id_for_label }}" class="font-weight-semibold">
+                                    {{ field.label }}
+                                </label>
+
+                                {# Si tienes django-widget-tweaks instalado, esto agrega la clase form-control #}
+                                {% render_field field class="form-control" %}
+
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">
+                                        {{ field.help_text }}
+                                    </small>
+                                {% endif %}
+
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ field.errors|striptags }}
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+                        {% endfor %}
 
-                <button type="submit" class="btn btn-primary">
-                    Guardar curso
-                </button>
-            </form>
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'cursos:lista' %}" class="btn btn-outline-secondary">
+                                Volver a la lista
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Guardar curso
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Pequeño texto de ayuda -->
+            <div class="text-center text-muted mt-3">
+                <small>
+                    Recuerda que luego podrás agregar módulos, contenidos y evaluaciones al curso.
+                </small>
+            </div>
 
         </div>
     </div>
 </div>
+
 {% endblock content %}

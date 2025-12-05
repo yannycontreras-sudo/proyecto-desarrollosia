@@ -1,35 +1,130 @@
 {% extends "home.html" %}
+{% load static %}
 
-{% block title %}Editar módulo{% endblock title %}
+{% block title %}Crear módulo | EduSalud UCN{% endblock title %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
+<section class="py-5" style="background: #f5f7fb;">
+    <div class="container">
 
-            <h1 class="mb-4">
-                {% if view.object %}Editar módulo{% else %}Crear módulo{% endif %}
-            </h1>
+        <!-- ENCABEZADO -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8 text-center">
+                <span class="badge bg-primary text-white mb-2 px-3 py-2" style="border-radius: 999px;">
+                    Nuevo módulo
+                </span>
+                <h1 class="display-5 mb-2">Crear módulo</h1>
+                <p class="text-muted mb-0">
+                    Completa la información para agregar un nuevo módulo
+                    {% if curso %} al curso <strong>{{ curso.nombre }}</strong>{% endif %}.
+                </p>
+            </div>
+        </div>
 
-            <form method="post">
-                {% csrf_token %}
-                {% for field in form %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="text-danger small">
-                                {{ field.errors|striptags }}
+        <!-- TARJETA FORMULARIO -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4 p-md-5">
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
                             </div>
                         {% endif %}
-                    </div>
-                {% endfor %}
-                <button type="submit" class="btn btn-primary">
-                    Guardar
-                </button>
-            </form>
 
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <!-- TÍTULO -->
+                            <div class="mb-4">
+                                <label for="id_titulo" class="form-label fw-semibold">
+                                    Título del módulo
+                                </label>
+                                <input
+                                    type="text"
+                                    id="id_titulo"
+                                    name="titulo"
+                                    class="form-control form-control-lg"
+                                    placeholder="Ej: Introducción a la anatomía"
+                                    value="{{ form.titulo.value|default_if_none:'' }}"
+                                >
+                                {% if form.titulo.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.titulo.errors|striptags }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- DESCRIPCIÓN -->
+                            <div class="mb-4">
+                                <label for="id_descripcion" class="form-label fw-semibold">
+                                    Descripción
+                                </label>
+                                <textarea
+                                    id="id_descripcion"
+                                    name="descripcion"
+                                    class="form-control"
+                                    rows="4"
+                                    placeholder="Describe brevemente los contenidos de este módulo..."
+                                >{{ form.descripcion.value|default_if_none:'' }}</textarea>
+                                <div class="form-text">
+                                    Esta descripción se mostrará a los estudiantes antes de entrar al módulo.
+                                </div>
+                                {% if form.descripcion.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.descripcion.errors|striptags }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- ORDEN -->
+                            <div class="mb-4">
+                                <label for="id_orden" class="form-label fw-semibold">
+                                    Orden dentro del curso
+                                </label>
+                                <input
+                                    type="number"
+                                    id="id_orden"
+                                    name="orden"
+                                    class="form-control"
+                                    min="1"
+                                    value="{{ form.orden.value|default_if_none:'' }}"
+                                >
+                                <div class="form-text">
+                                    Indica la posición que tendrá este módulo en el curso (1, 2, 3…).
+                                </div>
+                                {% if form.orden.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.orden.errors|striptags }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- BOTONES -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    Guardar módulo
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+                {% if curso %}
+                    <p class="text-muted small mt-3 text-center">
+                        Estás creando este módulo para el curso: <strong>{{ curso.nombre }}</strong>.
+                    </p>
+                {% endif %}
+            </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock content %}
+
+
+

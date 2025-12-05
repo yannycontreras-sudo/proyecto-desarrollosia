@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from .forms import RegistroForm, LoginForm
+from .forms import RegistroForm, LoginForm, ProfileForm
 
 
 def registro_view(request):
@@ -63,3 +64,21 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Has cerrado sesión correctamente.")
     return redirect("gestiondeusuarios:login")
+
+@login_required
+def editar_perfil(request):
+    user = request.user
+
+    if getattr(user, "role", None) not in ["student", "alumno", "teacher", "admin"] and not user .is_superuser:
+        messages.error(request, "No tienes permiso para editar este perfil.")
+        return redirect("core:home")
+    
+    if request.method == "POST":
+        form= ProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Perfil actualizado correctamente.")
+            return redirect("gestiondeusuarios: editar_perfil")
+        else:
+            form = ProfileForm(instance=user)
+        return render(request, "gestiondeusuarios/editar_perfil.html", { "form" : form})

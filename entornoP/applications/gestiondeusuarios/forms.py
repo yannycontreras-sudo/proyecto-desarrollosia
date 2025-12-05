@@ -81,3 +81,14 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = User
         fields = ("username", "email", "role", "is_active", "is_staff", "is_superuser")
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email", "photo" ]
+        labels = {
+            "first_name": "Nombre",
+            "last name": "Apellidos",
+            "email": "Correo institucional",
+            "photo": "Foto de perfil",
+         } 

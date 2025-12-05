@@ -43,7 +43,7 @@ def login_view(request):
 
             # Docente → lista de cursos
             elif role in ["teacher", "docente"]:
-                return redirect("cursos:lista")
+                return redirect("core:home")
 
             # Admin → home
             elif role in ["admin", "administrador"]:

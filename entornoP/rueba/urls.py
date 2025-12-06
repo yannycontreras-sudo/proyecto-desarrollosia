@@ -20,7 +20,14 @@ urlpatterns = [
 
     # Cursos
     path("cursos/", include("applications.cursos.urls")),
+
+    # tickets
+    path('tickets/', include('applications.tickets.urls')),
+
+
+
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

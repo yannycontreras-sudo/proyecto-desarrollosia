@@ -1,0 +1,27 @@
+{% extends "home.html" %}
+
+{% block content %}
+<h2>Mis Tickets</h2>
+
+
+
+<table class="table">
+    <tr>
+        <th>Título</th>
+        <th>Estado</th>
+        <th>Creado</th>
+    </tr>
+
+    {% for t in tickets %}
+    <tr>
+        <td>{{ t.titulo }}</td>
+        <td>{{ t.estado }}</td>
+        <td>{{ t.fecha_creacion }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<a href="{% url 'tickets:crear_ticket' %}" class="btn btn-success">
+    Crear nuevo ticket
+</a>
+{% endblock %}

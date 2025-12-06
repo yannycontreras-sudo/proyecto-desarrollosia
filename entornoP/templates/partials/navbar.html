@@ -1,4 +1,18 @@
 {% load static %}
+<<<<<<< HEAD
+<!-- Navbar Start -->
+<div class="container-fluid p-0">
+    <nav class="navbar navbar-expand-lg navbar-light py-3 py-lg-0 px-lg-5" style="background-color: #7a9ccc;">
+
+        <a href="#" class="navbar-brand ml-lg-3">
+            <h1 class="m-0 text-uppercase text-white d-flex align-items-center">
+                <img src="{% static 'img/Escudo-UCN-Full-blanco_trans.png' %}" alt="Escudo UCN" style="height: 40px;"
+                    class="me-2">
+                EduSalud UCN
+            </h1>
+        </a>
+=======
+>>>>>>> 2792aa3bb4a9a5c125355e84138430a7a0873940
 
 <nav class="navbar navbar-expand-lg" style="background:#2f63c8; padding: 0.6rem 2rem;">
     <!-- Logo + texto EDUSALUD UCN -->
@@ -26,10 +40,32 @@
                 <a class="nav-link text-white" href="{% url 'cursos:lista' %}">Cursos</a>
             </li>
 
+<<<<<<< HEAD
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle text-white" data-toggle="dropdown">Pages</a>
+                    <div class="dropdown-menu m-0">
+                        <a href="#" class="dropdown-item">Instructors</a>
+                        <a href="#" class="dropdown-item">Testimonial</a>
+                    </div>
+                </div>
+
+                <a href="#" class="nav-item nav-link text-white">Contacto</a>
+            </div>
+
+            {% if user.is_authenticated %}
+            <a href="{% url 'gestiondeusuarios:logout' %}" class="btn btn-light py-2 px-4 d-none d-lg-block">
+                Cerrar sesión
+            </a>
+            {% else %}
+            <a href="{% url 'gestiondeusuarios:login' %}" class="btn btn-light py-2 px-4 d-none d-lg-block">
+                Iniciar Sesión
+            </a>
+=======
             {% if user.role == 'student' or user.role == 'alumno' %}
             <li class="nav-item">
                 <a class="nav-link text-white" href="{% url 'cursos:mis_cursos' %}">Mis cursos</a>
             </li>
+>>>>>>> 2792aa3bb4a9a5c125355e84138430a7a0873940
             {% endif %}
 
             {% if user.role == 'teacher' or user.role == 'admin' %}
@@ -48,6 +84,12 @@
                 Cerrar sesión
             </a>
         </div>
+<<<<<<< HEAD
+    </nav>
+</div>
+<!-- Navbar End -->
+=======
     </div>
     {% endif %}
 </nav>
+>>>>>>> 2792aa3bb4a9a5c125355e84138430a7a0873940

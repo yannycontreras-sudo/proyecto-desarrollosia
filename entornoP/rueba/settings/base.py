@@ -25,13 +25,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'widget_tweaks',
 
-   # 'crispy_forms',
-    #'crispy_bootstrap5',
+    # 'crispy_forms',
+    # 'crispy_bootstrap5',
 
     # aplicaciones propias
     'applications.core',
     'applications.gestiondeusuarios',
     'applications.cursos',
+    'applications.tickets',
 ]
 
 MIDDLEWARE = [

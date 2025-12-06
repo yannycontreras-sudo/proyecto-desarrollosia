@@ -1,22 +1,19 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
-from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .models import User   # 👈 tu modelo personalizado
 
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
-    model = User
 
+    # Qué columnas mostrar en la tabla
     list_display = ("username", "email", "role", "is_staff", "is_superuser")
     list_filter = ("role", "is_staff", "is_superuser")
 
-    # Aquí definimos qué campos salen en cada pestaña
+    # Organización de las pestañas dentro del admin
     fieldsets = (
         ("General", {
-            "fields": ("username", "password", "role"),  # role en la pestaña General
+            "fields": ("username", "password", "role"),
         }),
         ("Información personal", {
             "fields": ("first_name", "last_name", "email"),
@@ -29,6 +26,7 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
+    # Formulario para agregar usuarios (sin CustomUserCreationForm)
     add_fieldsets = (
         ("General", {
             "classes": ("wide",),

@@ -1,4 +1,5 @@
 {% load static %}
+<<<<<<< HEAD
 <!-- Navbar Start -->
 <div class="container-fluid p-0">
     <nav class="navbar navbar-expand-lg navbar-light py-3 py-lg-0 px-lg-5" style="background-color: #7a9ccc;">
@@ -10,17 +11,36 @@
                 EduSalud UCN
             </h1>
         </a>
+=======
+>>>>>>> 2792aa3bb4a9a5c125355e84138430a7a0873940
 
-        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<nav class="navbar navbar-expand-lg" style="background:#2f63c8; padding: 0.6rem 2rem;">
+    <!-- Logo + texto EDUSALUD UCN -->
+    <a href="{% url 'core:home' %}" class="navbar-brand d-flex align-items-center mb-0">
+        <img src="{% static 'img/Escudo-UCN-Full-blanco_trans.png' %}"
+             alt="UCN"
+             style="height: 40px;"
+             class="me-2">
+        <span class="text-white fw-bold" style="font-size: 1.3rem;">EDUSALUD UCN</span>
+    </a>
 
-        <div class="collapse navbar-collapse justify-content-between px-lg-3" id="navbarCollapse">
-            <div class="navbar-nav mx-auto py-0">
+    <!-- SOLO MOSTRAR MENÚ SI EL USUARIO ESTÁ AUTENTICADO -->
+    {% if user.is_authenticated %}
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-                <a href="{% url 'core:home' %}" class="nav-item nav-link text-white">Inicio</a>
-                <a href="{% url 'cursos:lista' %}" class="nav-item nav-link text-white">Cursos</a>
+    <div class="collapse navbar-collapse justify-content-between" id="mainNavbar">
+        <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'core:home' %}">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'cursos:lista' %}">Cursos</a>
+            </li>
 
+<<<<<<< HEAD
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle text-white" data-toggle="dropdown">Pages</a>
                     <div class="dropdown-menu m-0">
@@ -40,8 +60,36 @@
             <a href="{% url 'gestiondeusuarios:login' %}" class="btn btn-light py-2 px-4 d-none d-lg-block">
                 Iniciar Sesión
             </a>
+=======
+            {% if user.role == 'student' or user.role == 'alumno' %}
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'cursos:mis_cursos' %}">Mis cursos</a>
+            </li>
+>>>>>>> 2792aa3bb4a9a5c125355e84138430a7a0873940
             {% endif %}
+
+            {% if user.role == 'teacher' or user.role == 'admin' %}
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'cursos:crear' %}">Crear curso</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'cursos:reportes_desempeno' %}">Reportes académicos</a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="d-flex">
+            <a href="{% url 'gestiondeusuarios:logout' %}"
+               class="btn btn-outline-light btn-sm">
+                Cerrar sesión
+            </a>
         </div>
+<<<<<<< HEAD
     </nav>
 </div>
 <!-- Navbar End -->
+=======
+    </div>
+    {% endif %}
+</nav>
+>>>>>>> 2792aa3bb4a9a5c125355e84138430a7a0873940

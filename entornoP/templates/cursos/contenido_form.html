@@ -1,35 +1,116 @@
 {% extends "home.html" %}
+{% load static %}
 
-{% block title %}Contenido{% endblock title %}
+{% block title %}Añadir contenido | EduSalud UCN{% endblock title %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
 
-            <h1 class="mb-4">
-                {% if view.object %}Editar contenido{% else %}Añadir contenido{% endif %}
-            </h1>
+<section class="py-5" style="background-color: #f3f6ff;">
+  <div class="container py-4">
+
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-7">
+
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4 p-md-5">
+
+            <h2 class="text-center mb-2" style="font-weight: 700; color: #1b1b2f;">
+              Añadir contenido
+            </h2>
+            <p class="text-center text-muted mb-4">
+              Completa la siguiente información para agregar nuevo material al módulo.
+            </p>
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
 
             <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                {% for field in form %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="text-danger small">
-                                {{ field.errors|striptags }}
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-                <button type="submit" class="btn btn-primary">
-                    Guardar
+              {% csrf_token %}
+
+              <!-- TÍTULO -->
+              <div class="mb-3">
+                <label class="form-label fw-semibold" for="id_titulo">
+                  Título del contenido
+                </label>
+                <input
+                  type="text"
+                  name="titulo"
+                  id="id_titulo"
+                  class="form-control"
+                  placeholder="Ej: Video introductorio de anatomía básica"
+                  value="{{ form.titulo.value|default:'' }}"
+                >
+                {% if form.titulo.errors %}
+                  <div class="text-danger small mt-1">
+                    {{ form.titulo.errors|striptags }}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- DESCRIPCIÓN -->
+              <div class="mb-3">
+                <label class="form-label fw-semibold" for="id_descripcion">
+                  Descripción
+                </label>
+                <textarea
+                  name="descripcion"
+                  id="id_descripcion"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Describe brevemente el objetivo y contenido de este recurso (PDF, video, guía, etc.)."
+                >{{ form.descripcion.value|default:'' }}</textarea>
+                {% if form.descripcion.errors %}
+                  <div class="text-danger small mt-1">
+                    {{ form.descripcion.errors|striptags }}
+                  </div>
+                {% endif %}
+                <small class="form-text text-muted">
+                  Describe brevemente el objetivo y contenido de este recurso.
+                </small>
+              </div>
+
+              <!-- ARCHIVO -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold" for="id_archivo">
+                  Archivo
+                </label>
+                <input
+                  type="file"
+                  name="archivo"
+                  id="id_archivo"
+                  class="form-control"
+                >
+                {% if form.archivo.errors %}
+                  <div class="text-danger small mt-1">
+                    {{ form.archivo.errors|striptags }}
+                  </div>
+                {% endif %}
+                <small class="form-text text-muted">
+                  Puedes subir presentaciones, documentos PDF, videos cortos u otro material complementario.
+                </small>
+              </div>
+
+              <div class="d-flex justify-content-between">
+                <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                  Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary px-4">
+                  Guardar contenido
                 </button>
+              </div>
+
             </form>
 
+          </div>
         </div>
+
+      </div>
     </div>
-</div>
+
+  </div>
+</section>
+
 {% endblock content %}

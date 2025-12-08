@@ -38,6 +38,7 @@ from .models import (
     RespuestaAlumno,
     Inscripcion,
     ProgresoModulo,
+    Simulacion,
 )
 
 User= get_user_model()
@@ -195,6 +196,47 @@ class CursoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         # es_docente = curso.docentes.filter(pk=user.pk).exists()
         # return es_docente or user.is_superuser
         return getattr(user, "role", None) in ("teacher", "admin") or user.is_superuser
+
+# ... arriba está CursoUpdateView ...
+
+
+@login_required
+def curso_confirmar_eliminar(request, pk):
+    """
+    Muestra una pantalla de confirmación ANTES de eliminar el curso.
+    """
+    curso = get_object_or_404(Curso, pk=pk)
+
+    # Solo docentes, admins o superuser pueden eliminar
+    user = request.user
+    if getattr(user, "role", None) not in ("teacher", "admin") and not user.is_superuser:
+        return HttpResponseForbidden("No tienes permiso para eliminar cursos.")
+
+    return render(request, "cursos/curso_confirmar_eliminar.html", {
+        "curso": curso
+    })
+
+
+@login_required
+def curso_eliminar(request, pk):
+    """
+    Elimina el curso SOLO si viene de un POST del formulario de confirmación.
+    """
+    curso = get_object_or_404(Curso, pk=pk)
+
+    user = request.user
+    if getattr(user, "role", None) not in ("teacher", "admin") and not user.is_superuser:
+        return HttpResponseForbidden("No tienes permiso para eliminar cursos.")
+
+    if request.method == "POST":
+        nombre = curso.nombre
+        curso.delete()
+        messages.success(request, f"El curso «{nombre}» fue eliminado correctamente.")
+        return redirect("cursos:lista")
+
+    # Si alguien entra por GET a esta URL, lo mando al detalle
+    return redirect("cursos:detalle", pk=pk)
+
 
     ##############################################################
     ##############################################################
@@ -606,9 +648,29 @@ def responder_formulario(request, formulario_id):
                 100 if total_preguntas > 0 else 0
             evaluacion.puntaje = puntaje
 
-            # Regla de aprobación: 60% o más (se puede cambiar)
+                    # Regla de aprobación: 60% o más (se puede cambiar)
             evaluacion.aprobado = puntaje >= 60
             evaluacion.save()
+
+        # === NUEVO: actualizar ProgresoModulo para desbloquear el siguiente ===
+        # El formulario pertenece a un contenido, y ese contenido a un módulo
+            modulo = formulario.contenido.modulo
+
+        # Obtenemos (o creamos) el progreso del alumno en este módulo
+            progreso_modulo, creado = ProgresoModulo.objects.get_or_create(
+                usuario=usuario,
+                modulo=modulo,
+                )
+            if evaluacion.aprobado:
+            # Si aprobó, dejamos el módulo como completado (100%)
+             progreso_modulo.progreso = 100
+            else:
+            # Si quieres marcar algo cuando reprueba, puedes ajustar aquí.
+            # Por ahora, si ya tenía un progreso mayor, no lo bajamos.
+               if progreso_modulo.progreso is None or progreso_modulo.progreso < 50:
+                    progreso_modulo.progreso = 50  # opcional, solo ejemplo
+                    progreso_modulo.save()
+        # ==============================================
 
             messages.success(
                 request,
@@ -865,20 +927,70 @@ def resultado_formulario(request, formulario_id):
     formulario = get_object_or_404(Formulario, id=formulario_id)
 
     try:
-        evaluacion = Evaluacion.objects.get(
-            usuario=usuario, formulario=formulario)
+        evaluacion = Evaluacion.objects.get(usuario=usuario, formulario=formulario)
     except Evaluacion.DoesNotExist:
         messages.error(request, "Aún no has respondido este formulario.")
         return redirect("cursos:detalle_formulario", pk=formulario.id)
 
+    # Obtener respuestas
     respuestas = RespuestaAlumno.objects.filter(
-        evaluacion=evaluacion).select_related("pregunta", "opcion")
+        evaluacion=evaluacion
+    ).select_related("pregunta", "opcion")
+
+    # ==========================================================
+    # LÓGICA PARA BUSCAR EL SIGUIENTE MÓDULO
+    # ==========================================================
+    modulo_actual = formulario.contenido.modulo
+    curso = modulo_actual.curso
+
+    modulos = list(curso.modulos.order_by("orden"))
+
+    siguiente_modulo = None
+    for index, mod in enumerate(modulos):
+        if mod.id == modulo_actual.id and index + 1 < len(modulos):
+            siguiente_modulo = modulos[index + 1]
+            break
+
+    # ==========================================================
 
     return render(request, "cursos/resultado_formulario.html", {
         "formulario": formulario,
         "evaluacion": evaluacion,
         "respuestas": respuestas,
+        "siguiente_modulo": siguiente_modulo,  # 🔥 SE ENVÍA AL TEMPLATE
     })
+
+
+@login_required
+def mis_notas_view(request):
+    """
+    Vista para que el ESTUDIANTE vea su historial de calificaciones
+    en formularios / simulaciones del curso.
+    """
+    usuario = request.user
+
+    # Solo estudiantes (o superuser, por si quieres testear)
+    if getattr(usuario, "role", None) not in ["student", "alumno"] and not usuario.is_superuser:
+        messages.error(request, "Solo los estudiantes pueden ver su historial de calificaciones.")
+        return redirect("core:home")
+
+    # Traer todas las evaluaciones del alumno
+    evaluaciones = (
+        Evaluacion.objects
+        .filter(usuario=usuario)
+        .select_related(
+            "formulario",
+            "formulario__contenido",
+            "formulario__contenido__modulo",
+            "formulario__contenido__modulo__curso",
+        )
+        .order_by("-fecha")
+    )
+
+    context = {
+        "evaluaciones": evaluaciones,
+    }
+    return render(request, "cursos/mis_notas.html", context)
 
 
 @login_required

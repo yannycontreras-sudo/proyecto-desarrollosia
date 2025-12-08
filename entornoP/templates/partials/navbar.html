@@ -66,6 +66,13 @@
 
         <!-- Botón login/logout -->
         <div class="d-flex">
+            {% if user.is_authenticated and user.avatar and user.avatar.imagen %}
+                <img src="{{ user.avatar.imagen.url }}"
+                     alt="Avatar"
+                     class="rounded-circle"
+                     style="width: 32px; height: 32px; object-fit: cover; margin-right: 8px;">
+            {% endif %}
+
             <a href="{% url 'gestiondeusuarios:logout' %}"
                class="btn btn-outline-light btn-sm">
                 Cerrar sesión

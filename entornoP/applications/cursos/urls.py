@@ -24,6 +24,9 @@ from .views import (
     iniciar_simulacion,
     reportes_desempeno,
     exportar_reporte_csv,
+    curso_confirmar_eliminar,
+    curso_eliminar,
+    mis_notas_view,
 
 )
 
@@ -34,10 +37,21 @@ urlpatterns = [
     # cursos
     path("", CursoListView.as_view(), name="lista"),
     path("mis-cursos/", mis_cursos_view, name="mis_cursos"),
+    path("mis-notas/", mis_notas_view, name="mis_notas"),
     path("crear/", CursoCreateView.as_view(), name="crear"),
     path("<int:pk>/", CursoDetailView.as_view(), name="detalle"),
     path("<int:pk>/editar/", CursoUpdateView.as_view(), name="editar"),
     path("<int:pk>/inscribirse/", inscribirse_curso_view, name="inscribirse"),
+   
+    path("curso/<int:pk>/confirmar-eliminar/",
+         curso_confirmar_eliminar,
+         name="curso_confirmar_eliminar"),
+
+    path("curso/<int:pk>/eliminar/",
+         curso_eliminar,
+         name="curso_eliminar"),
+
+
 
     # módulos
 
@@ -135,7 +149,6 @@ urlpatterns = [
         name="resultado_formulario"
     ),
    
-    # ... tus otras rutas ...
 
     path(
         "reportes/",

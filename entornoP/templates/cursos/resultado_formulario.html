@@ -34,9 +34,13 @@
         {% endfor %}
     </ul>
 
-    <a href="{% url 'cursos:detalle_formulario' formulario.pk %}" class="btn btn-secondary mt-4">
-        Volver al formulario
-    </a>
+    {% if evaluacion.aprobado and siguiente_modulo %}
+        <a href="{% url 'cursos:detalle' siguiente_modulo.curso.id %}#mod{{ siguiente_modulo.id }}"
+            class="btn btn-success mt-4">
+               Ir al siguiente módulo
+        </a>
+    {% endif %}
+
 
 </div>
 {% endblock content %}

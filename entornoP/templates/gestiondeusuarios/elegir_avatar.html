@@ -1,0 +1,94 @@
+{% extends "home.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-center mb-4">Selecciona tu avatar para las simulaciones</h2>
+
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-4 text-center">
+            <h5>Vista previa</h5>
+            <div id="avatar-preview" class="border rounded p-3">
+                {% if user.avatar %}
+                    <img id="preview-img"
+                         src="{{ user.avatar.imagen.url }}"
+                         alt="Avatar actual"
+                         class="img-fluid"
+                         style="max-height: 220px; object-fit: contain;">
+                {% else %}
+                    <p class="text-muted">Aún no has seleccionado un avatar.</p>
+                    <img id="preview-img"
+                         src=""
+                         alt=""
+                         class="img-fluid d-none">
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="row">
+                    {% for avatar in form.fields.avatar.queryset %}
+                        <div class="col-md-4 mb-4">
+                            <label class="w-100">
+                                <input type="radio"
+                                       name="avatar"
+                                       value="{{ avatar.id }}"
+                                       class="d-none avatar-radio"
+                                       {% if user.avatar and user.avatar.id == avatar.id %}checked{% endif %}>
+
+                                <div class="card avatar-card {% if user.avatar and user.avatar.id == avatar.id %}border-primary{% endif %}">
+                                    <img src="{{ avatar.imagen.url }}"
+                                         alt="{{ avatar.nombre }}"
+                                         class="card-img-top"
+                                         style="height: 160px; object-fit: contain;">
+
+                                    <div class="card-body text-center">
+                                        <p class="card-text">{{ avatar.nombre }}</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    {% empty %}
+                        <p>No hay avatares configurados todavía.</p>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mt-3">
+                    Guardar avatar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// JS simple para:
+// - cambiar la vista previa
+// - marcar tarjeta seleccionada visualmente
+document.addEventListener("DOMContentLoaded", function () {
+    const radios = document.querySelectorAll(".avatar-radio");
+    const previewImg = document.getElementById("preview-img");
+    const cards = document.querySelectorAll(".avatar-card");
+
+    radios.forEach((radio, index) => {
+        radio.addEventListener("change", function () {
+            const card = cards[index];
+            const img = card.querySelector("img");
+
+            // actualizar src de la vista previa
+            previewImg.src = img.src;
+            previewImg.classList.remove("d-none");
+
+            // resaltar tarjeta seleccionada
+            cards.forEach(c => c.classList.remove("border-primary"));
+            card.classList.add("border-primary");
+        });
+    });
+});
+</script>
+{% endblock %}

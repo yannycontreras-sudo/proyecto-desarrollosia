@@ -3,6 +3,12 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 # Admin, alumno y docente, class user
 
+class Avatar(models.Model):
+    nombre = models.CharField(max_length=50)
+    imagen = models.ImageField(upload_to="avatars_library/")
+
+    def __str__(self):
+        return self.nombre
 
 
 
@@ -23,6 +29,22 @@ class User(AbstractUser):
     nombre_emergencia = models.CharField("Nombre contacto de emergencia", max_length=100, blank=True, null=True)
     telefono_emergencia = models.CharField("Teléfono contacto de emergencia", max_length=20, blank=True, null=True)
 
+    photo = models.ImageField(
+        "Foto de perfil",
+        upload_to="avatars/",
+        blank=True,
+        null=True,
+    )
+
+    avatar = models.ForeignKey(
+        Avatar,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="usuarios",
+        verbose_name="Avatar de simulación",
+    )
+  
 
     # si quieres obligar email único, hazlo en settings:
     # ACCOUNT_UNIQUE_EMAIL = True (si usas allauth)

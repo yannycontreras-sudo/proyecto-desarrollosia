@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-
+from .models import Avatar
 
 
 User = get_user_model()
@@ -93,6 +93,7 @@ class ProfileForm(forms.ModelForm):
             "direccion",
             "nombre_emergencia",
             "telefono_emergencia",
+            "photo",
         ]
         widgets = {
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
@@ -102,5 +103,19 @@ class ProfileForm(forms.ModelForm):
             "direccion": forms.TextInput(attrs={"class": "form-control"}),
             "nombre_emergencia": forms.TextInput(attrs={"class": "form-control"}),
             "telefono_emergencia": forms.TextInput(attrs={"class": "form-control"}),
+            "photo": forms.FileInput(attrs={"class":"form-control"}),
         }
 
+
+
+class AvatarSelectionForm(forms.ModelForm):
+    avatar = forms.ModelChoiceField(
+        queryset=Avatar.objects.all(),
+        widget=forms.RadioSelect,
+        empty_label=None,
+        label="Selecciona tu avatar"
+    )
+
+    class Meta:
+        model = User
+        fields = ["avatar"]

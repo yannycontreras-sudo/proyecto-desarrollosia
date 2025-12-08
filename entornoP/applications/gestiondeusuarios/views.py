@@ -3,8 +3,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from .forms import RegistroForm, LoginForm, ProfileForm
-
+from .forms import RegistroForm, LoginForm, ProfileForm, AvatarSelectionForm
+from .models import Avatar
 
 def registro_view(request):
     if request.method == "POST":
@@ -87,3 +87,24 @@ def editar_perfil(request):
 
     # En ambos casos (GET o POST con errores) llegamos aquí
     return render(request, "gestiondeusuarios/editar_perfil.html", {"form": form})
+
+
+@login_required
+def elegir_avatar(request):
+    user = request.user
+
+    # Validar rol estudiante de forma robusta
+    if user.role.lower().strip() not in ["alumno", "student"]:
+        messages.error(request, "Solo los estudiantes pueden modificar su avatar.")
+        return redirect("core:home")
+
+    if request.method == "POST":
+        form = AvatarSelectionForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Avatar actualizado correctamente.")
+            return redirect("gestiondeusuarios:elegir_avatar")
+    else:
+        form = AvatarSelectionForm(instance=user)
+
+    return render(request, "gestiondeusuarios/elegir_avatar.html", {"form": form})

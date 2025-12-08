@@ -3,6 +3,26 @@
 {% block title %}Responder formulario{% endblock title %}
 
 {% block content %}
+
+    {% if user.is_authenticated and user.avatar and user.avatar.imagen %}
+    <div style="position: fixed; top: 90px; right: 20px; z-index: 2000;">
+        <img src="{{ user.avatar.imagen.url }}"
+             alt="Avatar del estudiante"
+             style="
+                width: 85px;
+                height: 85px;
+                border-radius: 50%;
+                border: 3px solid #007bff;
+                background: white;
+                object-fit: cover;
+                box-shadow: 0 0 12px rgba(0,0,0,0.4);
+             ">
+        <div style="text-align:center; font-size: 0.8rem; margin-top: 4px; color: #007bff;">
+            {{ user.first_name|default:user.username }}
+        </div>
+    </div>
+    {% endif %}
+
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">

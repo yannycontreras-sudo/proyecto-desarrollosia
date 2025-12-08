@@ -1,27 +1,38 @@
-{% extends "home.html" %}
+{% extends "Base/base.html" %}  {# Ajusta al nombre real de tu base #}
 
 {% block content %}
-<h2>Mis Tickets</h2>
+<div class="container mt-4">
+    <h2>Mis tickets de soporte</h2>
 
+    <a href="{% url 'tickets:crear_ticket' %}" class="btn btn-success mb-3">
+        Crear nuevo ticket
+    </a>
 
-
-<table class="table">
-    <tr>
-        <th>Título</th>
-        <th>Estado</th>
-        <th>Creado</th>
-    </tr>
-
-    {% for t in tickets %}
-    <tr>
-        <td>{{ t.titulo }}</td>
-        <td>{{ t.estado }}</td>
-        <td>{{ t.fecha_creacion }}</td>
-    </tr>
-    {% endfor %}
-</table>
-
-<a href="{% url 'tickets:crear_ticket' %}" class="btn btn-success">
-    Crear nuevo ticket
-</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Estado</th>
+                <th>Fecha de creación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+                <tr>
+                    <td>{{ ticket.id }}</td>
+                    <td>{{ ticket.titulo }}</td>
+                    <td>{{ ticket.get_estado_display }}</td>
+                    <td>{{ ticket.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">
+                        No tienes tickets registrados.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

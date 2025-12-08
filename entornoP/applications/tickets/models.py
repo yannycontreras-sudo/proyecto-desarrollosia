@@ -1,24 +1,21 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
-from django.conf import settings
-
+User = get_user_model()
 
 class Ticket(models.Model):
-    ESTADO_CHOICES = [
-        ('ABIERTO', 'Abierto'),
-        ('EN_PROCESO', 'En proceso'),
-        ('CERRADO', 'Cerrado'),
+    ESTADOS = [
+        ("RECIBIDO", "Recibido"),
+        ("EN_REVISION", "En revisión"),
+        ("EN_PROGRESO", "En progreso"),
+        ("RESUELTO", "Resuelto"),
     ]
 
-    titulo = models.CharField(max_length=255)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
-    estado = models.CharField(
-        max_length=20, choices=ESTADO_CHOICES, default='ABIERTO')
+    estado = models.CharField(max_length=20, choices=ESTADOS, default="RECIBIDO")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.titulo} - {self.estado}"
+        return f"{self.titulo} - {self.usuario.username}"

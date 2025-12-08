@@ -1,13 +1,23 @@
-{% extends "home.html" %}
+{% extends "Base/base.html" %} {# O el nombre que uses como base #}
 
 {% block content %}
-<h2>Crear ticket</h2>
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
+<div class="container mt-4">
+    <h2>Crear ticket de soporte</h2>
+    <p class="text-muted">
+        Completa el formulario para registrar tu problema, incidente o solicitud técnica.
+    </p>
 
-    <button type="submit" class="btn btn-primary">Enviar</button>
-</form>
-<a href="{% url 'tickets:lista_tickets' %}">Volver a mis tickets</a>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
 
+        <button type="submit" class="btn btn-primary">
+            Enviar ticket
+        </button>
+
+        <a href="{% url 'tickets:lista_tickets' %}" class="btn btn-secondary ms-2">
+            Ver mis tickets
+        </a>
+    </form>
+</div>
 {% endblock %}

@@ -201,12 +201,16 @@
                     <div class="card-body">
                         <h5 class="card-title">Mi cuenta</h5>
                         <p class="card-text">
-                            Mantén tus datos siempre actualizados para una mejor experiencia en la plataforma.
+                           Mantén tus datos siempre actualizados para una mejor experiencia en la plataforma.
                         </p>
-                        <a href="#" class="btn btn-sm btn-primary disabled">Próximamente</a>
-                    </div>
+                        <a href="{% url 'gestiondeusuarios:editar_perfil' %}" 
+                           class="btn btn-sm btn-primary">
+                            Editar perfil
+                        </a>
+                   </div>
                 </div>
-            </div>
+          </div>
+
         </div>
     </div>
 

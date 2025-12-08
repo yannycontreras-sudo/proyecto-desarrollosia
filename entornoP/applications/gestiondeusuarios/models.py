@@ -17,6 +17,12 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.STUDENT,
     )
+        # Campos adicionales del perfil
+    telefono = models.CharField("Número de teléfono", max_length=20, blank=True, null=True)
+    direccion = models.CharField("Dirección", max_length=255, blank=True, null=True)
+    nombre_emergencia = models.CharField("Nombre contacto de emergencia", max_length=100, blank=True, null=True)
+    telefono_emergencia = models.CharField("Teléfono contacto de emergencia", max_length=20, blank=True, null=True)
+
 
     # si quieres obligar email único, hazlo en settings:
     # ACCOUNT_UNIQUE_EMAIL = True (si usas allauth)

@@ -69,16 +69,21 @@ def logout_view(request):
 def editar_perfil(request):
     user = request.user
 
-    if getattr(user, "role", None) not in ["student", "alumno", "teacher", "admin"] and not user .is_superuser:
+    # Validación básica de rol (opcional, la puedes ajustar)
+    if getattr(user, "role", None) not in ["student", "alumno", "teacher", "admin"] and not user.is_superuser:
         messages.error(request, "No tienes permiso para editar este perfil.")
         return redirect("core:home")
-    
+
     if request.method == "POST":
-        form= ProfileForm(request.POST, request.FILES, instance=user)
+        form = ProfileForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
             messages.success(request, "Perfil actualizado correctamente.")
-            return redirect("gestiondeusuarios: editar_perfil")
-        else:
-            form = ProfileForm(instance=user)
-        return render(request, "gestiondeusuarios/editar_perfil.html", { "form" : form})
+            # Ojo: sin espacio en el nombre de la url
+            return redirect("gestiondeusuarios:editar_perfil")
+    else:
+        # GET → mostramos el formulario con los datos actuales del usuario
+        form = ProfileForm(instance=user)
+
+    # En ambos casos (GET o POST con errores) llegamos aquí
+    return render(request, "gestiondeusuarios/editar_perfil.html", {"form": form})

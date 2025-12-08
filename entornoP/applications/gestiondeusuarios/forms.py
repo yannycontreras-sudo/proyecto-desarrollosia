@@ -85,16 +85,22 @@ class CustomUserChangeForm(UserChangeForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        # SOLO campos que existen en el modelo User
-        fields = ["first_name", "last_name", "email"]
-        labels = {
-            "first_name": "Nombre",
-            "last_name": "Apellidos",           # 👈 ojo: era "last name", ahora bien escrito
-            "email": "Correo institucional",
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "telefono",
+            "direccion",
+            "nombre_emergencia",
+            "telefono_emergencia",
+        ]
+        widgets = {
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "telefono": forms.TextInput(attrs={"class": "form-control"}),
+            "direccion": forms.TextInput(attrs={"class": "form-control"}),
+            "nombre_emergencia": forms.TextInput(attrs={"class": "form-control"}),
+            "telefono_emergencia": forms.TextInput(attrs={"class": "form-control"}),
         }
-        # (opcional) si quieres widgets:
-        # widgets = {
-        #     "first_name": forms.TextInput(attrs={"class": "form-control"}),
-        #     "last_name": forms.TextInput(attrs={"class": "form-control"}),
-        #     "email": forms.EmailInput(attrs={"class": "form-control"}),
-        # }
+

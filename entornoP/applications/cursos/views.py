@@ -13,7 +13,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
+from django.utils import timezone
 
 
 from .forms import (
@@ -39,6 +39,7 @@ from .models import (
     Inscripcion,
     ProgresoModulo,
     Simulacion,
+    ProgresoSimulacion,
 )
 
 User= get_user_model()
@@ -652,6 +653,21 @@ def responder_formulario(request, formulario_id):
             evaluacion.aprobado = puntaje >= 60
             evaluacion.save()
 
+            # FINALIZAR SIMULACIÓN SI PROVIENE DE UNA
+            simulacion = getattr(formulario, "simulacion", None)
+            if simulacion:
+                progreso = ProgresoSimulacion.objects.filter(
+                    usuario=usuario,
+                    simulacion=simulacion,
+                 estado="iniciada"
+                ).first()
+
+                if progreso:
+                    progreso.estado = "completada"
+                    progreso.fecha_fin = timezone.now()
+                    progreso.save()
+
+
         # === NUEVO: actualizar ProgresoModulo para desbloquear el siguiente ===
         # El formulario pertenece a un contenido, y ese contenido a un módulo
             modulo = formulario.contenido.modulo
@@ -997,7 +1013,8 @@ def mis_notas_view(request):
 def iniciar_simulacion(request, simulacion_id):
     """
     Vista para que el ESTUDIANTE inicie una simulación.
-    Crea una evaluación y redirige al formulario para responder.
+    Registra el inicio en ProgresoSimulacion
+    y redirige al formulario para responder.
     """
     simulacion = get_object_or_404(Simulacion, id=simulacion_id)
     usuario = request.user
@@ -1020,18 +1037,69 @@ def iniciar_simulacion(request, simulacion_id):
         return redirect("cursos:detalle", pk=curso.pk)
 
     # Verificar que la simulación tenga un formulario asociado
-    if not hasattr(simulacion, 'formulario') or not simulacion.formulario:
+    if not hasattr(simulacion, "formulario") or not simulacion.formulario:
         messages.error(
-            request, "Esta simulación no tiene un formulario configurado.")
+            request,
+            "Esta simulación no tiene un formulario configurado."
+        )
         return redirect("cursos:detalle", pk=curso.pk)
 
     formulario = simulacion.formulario
 
-    # Verificar si ya respondió este formulario
-    if Evaluacion.objects.filter(usuario=usuario, formulario=formulario).exists():
+    # Si YA respondió este formulario → no repetir, marcar como completada y mandar a resultados
+    evaluacion_existente = Evaluacion.objects.filter(
+        usuario=usuario,
+        formulario=formulario
+    ).first()
+
+    if evaluacion_existente:
+        # Marcar progreso como completado si existe uno iniciado
+        progreso, _ = ProgresoSimulacion.objects.get_or_create(
+            usuario=usuario,
+            simulacion=simulacion,
+        )
+        if progreso.estado != "completada":
+            progreso.estado = "completada"
+            if not progreso.fecha_fin:
+                progreso.fecha_fin = timezone.now()
+            progreso.save()
+
         messages.info(request, "Ya has realizado esta simulación.")
         return redirect("cursos:resultado_formulario", formulario_id=formulario.id)
 
-    # Redirigir a responder el formulario
+    # Crear / actualizar progreso como INICIADA
+    progreso, creado = ProgresoSimulacion.objects.get_or_create(
+        usuario=usuario,
+        simulacion=simulacion,
+        defaults={"estado": "iniciada"},
+    )
+
+    if not creado:
+        # Reinicio de intento (si lo permites): volvemos a estado iniciada
+        progreso.estado = "iniciada"
+        progreso.fecha_inicio = timezone.now()
+        progreso.fecha_fin = None
+        progreso.save()
+
     messages.success(request, f"Simulación '{simulacion.nombre}' iniciada.")
     return redirect("cursos:responder_formulario", formulario_id=formulario.id)
+
+@login_required
+def simulaciones_por_curso(request, curso_id):
+    curso = get_object_or_404(Curso, id=curso_id)
+
+    # Validación: solo estudiantes inscritos pueden verlas
+    if getattr(request.user, "role", None) not in ["student", "alumno"] and not request.user.is_superuser:
+        messages.error(request, "Solo los estudiantes pueden ver simulaciones.")
+        return redirect("core:home")
+
+    if not Inscripcion.objects.filter(usuario=request.user, curso=curso).exists():
+        messages.error(request, "No estás inscrito en este curso.")
+        return redirect("core:home")
+
+    simulaciones = Simulacion.objects.filter(modulo__curso=curso)
+
+    return render(request, "cursos/simulaciones_por_curso.html", {
+        "curso": curso,
+        "simulaciones": simulaciones
+    })

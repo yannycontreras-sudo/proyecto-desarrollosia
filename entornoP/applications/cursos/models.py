@@ -341,3 +341,25 @@ def evaluar_modulo(sender, instance, created, **kwargs):
 
     # Desbloquea el siguiente módulo
     desbloquear_siguiente_modulo(modulo, usuario)
+
+class ProgresoSimulacion(models.Model):
+    ESTADOS = [
+        ("iniciada", "Iniciada"),
+        ("completada", "Completada"),
+    ]
+
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    simulacion = models.ForeignKey(Simulacion, on_delete=models.CASCADE)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default="iniciada")
+
+    fecha_inicio = models.DateTimeField(auto_now_add=True)
+    fecha_fin = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def tiempo_total(self):
+        if self.fecha_fin:
+            return (self.fecha_fin - self.fecha_inicio).total_seconds()
+        return None
+
+    def __str__(self):
+        return f"{self.usuario} - {self.simulacion} ({self.estado})"

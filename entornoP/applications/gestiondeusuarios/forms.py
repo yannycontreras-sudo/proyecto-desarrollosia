@@ -9,9 +9,9 @@ User = get_user_model()
 
 
 class RegistroForm(UserCreationForm):
+
     class Meta(UserCreationForm.Meta):
         model = User
-        # 👇 ya NO ponemos "role" aquí
         fields = ("username", "email")
 
     def clean_email(self):
@@ -25,20 +25,44 @@ class RegistroForm(UserCreationForm):
         except ValueError:
             raise ValidationError("Correo electrónico inválido.")
 
-        allowed_domains = ("ucn.cl", "alumnos.ucn.cl")
+        # Dominios permitidos
+        allowed_domains = (
+            "ucn.cl",
+            "alumnos.ucn.cl",
+            "gmail.com",
+            "hotmail.cl",
+            "hotmail.com",
+            "outlook.com",
+        )
+
         if domain not in allowed_domains:
-            raise ValidationError("Solo se permiten correos @ucn.cl o @alumnos.ucn.cl.")
+            raise ValidationError("Dominio no permitido. Usa correo institucional UCN o Gmail/Hotmail si eres administrador.")
 
         return email
 
     def save(self, commit=True):
-        # llamamos a UserCreationForm.save() pero SIN guardar todavía
         user = super().save(commit=False)
-        # 👇 rol fijo para todos los que se registran por el front
-        user.role = "alumno"   # o el valor que uses internamente para "Alumno"
+        email = self.cleaned_data.get("email", "").lower()
+
+        # 🔥 Asignación automática de rol según el correo
+        if email.endswith("@alumnos.ucn.cl"):
+            user.role = "alumno"
+
+        elif email.endswith("@ucn.cl"):
+            user.role = "teacher"
+
+        elif email.endswith("@gmail.com") or email.endswith("@hotmail.cl") or email.endswith("@hotmail.com") or email.endswith("@outlook.com"):
+            user.role = "admin"
+            user.is_staff = True
+            user.is_superuser = True
+
+        else:
+            user.role = "alumno"   # fallback opcional
+
         if commit:
             user.save()
         return user
+
 
 class LoginForm(AuthenticationForm):
     # solo cambiamos labels / clases si quieres

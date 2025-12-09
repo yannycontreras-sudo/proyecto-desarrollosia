@@ -27,6 +27,7 @@ from .views import (
     curso_confirmar_eliminar,
     curso_eliminar,
     mis_notas_view,
+    simulaciones_por_curso,
 
 )
 
@@ -160,6 +161,9 @@ urlpatterns = [
         exportar_reporte_csv, 
         name="exportar_reporte_csv"
         ),
+
+    path("curso/<int:curso_id>/simulaciones/", simulaciones_por_curso, name="simulaciones_por_curso"),
+
 
 
     # si luego hacemos PDF:

@@ -38,6 +38,13 @@
                 {% endif %}
             {% endif %}
 
+            {% if user.role == "student" or user.role == "alumno" %}
+                <a href="{% url 'cursos:simulaciones_por_curso' curso.id %}"
+                       class="btn btn-info mt-2">
+                           Ver simulaciones
+                </a>
+            {% endif %}
+
             {# INSCRIPCIÓN ALUMNO #}
             {% if esta_inscrito %}
                 <span class="badge badge-success p-2 d-block mt-2">

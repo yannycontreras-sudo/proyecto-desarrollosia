@@ -68,11 +68,19 @@ class Simulacion(models.Model):
     nombre = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True, null=True)
 
-    # Relación con el módulo (esto sí lo queremos)
     modulo = models.OneToOneField(
         "Modulo",
         on_delete=models.CASCADE,
         related_name="simulacion",
+    )
+
+    # ✅ ESTE ES EL CAMPO QUE FALTABA
+    formulario = models.ForeignKey(
+        "Formulario",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="simulaciones",
     )
 
     video = models.FileField(
@@ -89,7 +97,6 @@ class Simulacion(models.Model):
 
     def __str__(self):
         return self.nombre
-
 
 
 

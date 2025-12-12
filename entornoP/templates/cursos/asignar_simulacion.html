@@ -14,9 +14,18 @@
         Curso: {{ modulo.curso.nombre }}
     </p>
 
+    {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     <form method="post" class="mt-3">
         {% csrf_token %}
 
+        <!-- ✅ Select simulación -->
         <div class="form-group">
             <label for="id_simulacion"><strong>Selecciona una simulación</strong></label>
             <select name="simulacion_id" id="id_simulacion" class="form-control" required>
@@ -28,6 +37,22 @@
                     </option>
                 {% endfor %}
             </select>
+        </div>
+
+        <!-- ✅ Select formulario -->
+        <div class="form-group mt-3">
+            <label for="id_formulario"><strong>Selecciona el formulario de evaluación</strong></label>
+            <select name="formulario_id" id="id_formulario" class="form-control" required>
+                <option value="">-- Elige un formulario --</option>
+                {% for f in formularios %}
+                    <option value="{{ f.id }}">
+                        Formulario #{{ f.id }} - {{ f.contenido.titulo }}
+                    </option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">
+                Solo aparecen formularios creados dentro de contenidos de este módulo.
+            </small>
         </div>
 
         <button type="submit" class="btn btn-success mt-2">Guardar</button>

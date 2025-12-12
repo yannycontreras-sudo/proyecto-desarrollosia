@@ -580,12 +580,10 @@ def responder_formulario(request, formulario_id):
     )
 
     if not preguntas:
-        messages.info(
-            request, "Este formulario aún no tiene preguntas configuradas.")
+        messages.info(request, "Este formulario aún no tiene preguntas configuradas.")
         return redirect("cursos:detalle_formulario", pk=formulario.id)
 
     if request.method == "POST":
-        # 👈 OJO: aquí va 'preguntas', sin typo
         form = ResponderFormularioForm(request.POST, preguntas=preguntas)
 
         if form.is_valid():
@@ -645,12 +643,11 @@ def responder_formulario(request, formulario_id):
                 if es_correcta:
                     correctas += 1
 
-            # calcular puntaje (0-100%) considerando TODAS las preguntas
-            puntaje = (correctas / total_preguntas) * \
-                100 if total_preguntas > 0 else 0
+            # Calcular puntaje (0-100%)
+            puntaje = (correctas / total_preguntas) * 100 if total_preguntas > 0 else 0
             evaluacion.puntaje = puntaje
 
-                    # Regla de aprobación: 60% o más (se puede cambiar)
+            # Regla de aprobación: 60% o más
             evaluacion.aprobado = puntaje >= 60
             evaluacion.save()
 
@@ -660,7 +657,7 @@ def responder_formulario(request, formulario_id):
                 progreso = ProgresoSimulacion.objects.filter(
                     usuario=usuario,
                     simulacion=simulacion,
-                 estado="iniciada"
+                    estado="iniciada",
                 ).first()
 
                 if progreso:
@@ -668,32 +665,33 @@ def responder_formulario(request, formulario_id):
                     progreso.fecha_fin = timezone.now()
                     progreso.save()
 
-
-        # === NUEVO: actualizar ProgresoModulo para desbloquear el siguiente ===
-        # El formulario pertenece a un contenido, y ese contenido a un módulo
+            # === Progreso del módulo para desbloquear el siguiente ===
             modulo = formulario.contenido.modulo
 
-        # Obtenemos (o creamos) el progreso del alumno en este módulo
             progreso_modulo, creado = ProgresoModulo.objects.get_or_create(
                 usuario=usuario,
                 modulo=modulo,
-                )
+            )
+
             if evaluacion.aprobado:
-            # Si aprobó, dejamos el módulo como completado (100%)
-             progreso_modulo.progreso = 100
+                # Si aprobó, dejamos el módulo como completado (100%)
+                progreso_modulo.progreso = 100
             else:
-            # Si quieres marcar algo cuando reprueba, puedes ajustar aquí.
-            # Por ahora, si ya tenía un progreso mayor, no lo bajamos.
-               if progreso_modulo.progreso is None or progreso_modulo.progreso < 50:
-                    progreso_modulo.progreso = 50  # opcional, solo ejemplo
-                    progreso_modulo.save()
-        # ==============================================
+                # Si reprueba, solo subimos a 50% si estaba más bajo o en None (ejemplo)
+                if progreso_modulo.progreso is None or progreso_modulo.progreso < 50:
+                    progreso_modulo.progreso = 50
+
+            progreso_modulo.save()
+            # ==========================================================
 
             messages.success(
                 request,
                 f"Evaluación enviada. Tu puntaje fue {puntaje:.2f}%.",
             )
-            return redirect("cursos:detalle_formulario", pk=formulario.id)
+
+            # 👇 AQUÍ ES DONDE CAMBIA: vamos directo al resultado
+            return redirect("cursos:resultado_formulario", formulario_id=formulario.id)
+
     else:
         # GET: mostrar el formulario vacío para responder
         form = ResponderFormularioForm(preguntas=preguntas)
@@ -1109,44 +1107,65 @@ def iniciar_simulacion(request, simulacion_id):
 @login_required
 def asignar_simulacion_modulo(request, modulo_id):
     """
-    Permite a un docente/admin elegir qué simulación se asocia a un módulo.
+    Permite a un docente/admin asignar una simulación
+    y su formulario correspondiente a un módulo.
     """
     modulo = get_object_or_404(Modulo, pk=modulo_id)
 
-    # Permisos: solo teacher, admin o superuser
+    # Permisos
     if not (
         getattr(request.user, "role", None) in ["teacher", "admin"]
         or request.user.is_superuser
     ):
         return HttpResponseForbidden("No tienes permisos para asignar simulaciones.")
 
-    # Si tu modelo Simulacion tiene FK a Curso, puedes filtrar:
-    # simulaciones = Simulacion.objects.filter(modulo__curso=modulo.curso).distinct()
-    # Por ahora, usamos todas:
-    simulaciones = Simulacion.objects.all()
+    # Simulaciones del módulo
+    simulaciones = Simulacion.objects.filter(modulo=modulo)
+
+    # Formularios disponibles DEL MISMO MÓDULO
+    formularios = Formulario.objects.filter(
+        contenido__modulo=modulo
+    ).distinct()
 
     if request.method == "POST":
         simulacion_id = request.POST.get("simulacion_id")
+        formulario_id = request.POST.get("formulario_id")
 
-        if simulacion_id:
-            simulacion = get_object_or_404(Simulacion, pk=simulacion_id)
-            modulo.simulacion = simulacion
-            modulo.save()
+        if not simulacion_id:
+            messages.error(request, "Debes seleccionar una simulación.")
+            return redirect("cursos:asignar_simulacion_modulo", modulo_id=modulo.id)
 
-            # Vuelta al detalle del curso
-            return redirect("cursos:detalle", pk=modulo.curso.pk)
+        simulacion = get_object_or_404(Simulacion, pk=simulacion_id)
 
-    # Si es GET o POST sin simulación elegida, mostramos el formulario
+        # Asignar simulación al módulo
+        modulo.simulacion = simulacion
+        modulo.save()
+
+        # Asignar formulario a la simulación (CLAVE)
+        if formulario_id:
+            formulario = get_object_or_404(
+                Formulario,
+                pk=formulario_id,
+                contenido__modulo=modulo
+            )
+            simulacion.formulario = formulario
+            simulacion.save()
+
+        messages.success(
+            request,
+            "Simulación y formulario asignados correctamente."
+        )
+
+        return redirect("cursos:detalle", pk=modulo.curso.pk)
+
     context = {
         "modulo": modulo,
         "simulaciones": simulaciones,
+        "formularios": formularios,
     }
+
     return render(request, "cursos/asignar_simulacion.html", context)
 
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render, redirect
-from .models import Modulo, Simulacion, Formulario  # ajusta import según tu organización
 
 
 @login_required

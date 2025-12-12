@@ -5,6 +5,7 @@
 {% block content %}
 <div class="container py-4">
 
+    <!-- CABECERA -->
     <h2 class="mb-3">
         Simulación: {{ simulacion.nombre }}
     </h2>
@@ -21,8 +22,41 @@
 
     <hr>
 
+    <!-- MATERIAL PRINCIPAL DE LA SIMULACIÓN -->
     <h4 class="mb-3">Material de la simulación</h4>
 
+    {# VIDEO PRINCIPAL CARGADO EN LA SIMULACIÓN #}
+    {% if simulacion.video %}
+        <div class="mb-4">
+            <h5>Video principal de la simulación</h5>
+            <video controls style="width: 100%; max-width: 900px; display:block; margin-bottom:10px;">
+                <source src="{{ simulacion.video.url }}" type="video/mp4">
+                Tu navegador no soporta videos.
+            </video>
+        </div>
+        <hr>
+    {% endif %}
+
+    {# IMAGEN PRINCIPAL DE LA SIMULACIÓN (SI EXISTE) #}
+    {% if simulacion.imagen %}
+        <div class="mb-4">
+            <h5>Imagen asociada</h5>
+            <img src="{{ simulacion.imagen.url }}"
+                 alt="Imagen de la simulación"
+                 style="width: 100%; max-width: 900px; display:block; margin-bottom:10px;">
+        </div>
+        <hr>
+    {% endif %}
+
+    {# CONTENIDO HTML / INSTRUCCIONES (SI USAS ESTE CAMPO) #}
+    {% if simulacion.contenido_html %}
+        <div class="alert alert-secondary">
+            {{ simulacion.contenido_html|safe }}
+        </div>
+        <hr>
+    {% endif %}
+
+    <!-- CONTENIDOS DEL MÓDULO LIGADOS A LA SIMULACIÓN -->
     {% if contenidos %}
         {% for contenido in contenidos %}
             <div class="mb-4">
@@ -31,7 +65,7 @@
 
                 {# VIDEO EN GRANDE #}
                 {% if contenido.archivo and contenido.es_video %}
-                    <video controls style="width: 100%; max-width: 900px; display:block; margin-bottom:10px;">
+                    <video controls style="width: 100%; max-width: 500px; display:block; margin: 0 auto 15px auto; border-radius: 8px;">
                         <source src="{{ contenido.archivo.url }}" type="video/mp4">
                         Tu navegador no soporta videos.
                     </video>
@@ -62,15 +96,18 @@
         {% endfor %}
     {% else %}
         <p class="text-muted">
-            Este módulo no tiene contenidos cargados aún.
+            Este módulo no tiene contenidos adicionales cargados para la simulación.
         </p>
     {% endif %}
 
+    <!-- BOTONES FINALES -->
     <div class="mt-4">
-        <a href="{% url 'cursos:responder_formulario' formulario.id %}"
-           class="btn btn-success btn-lg">
-            Responder evaluación de la simulación
-        </a>
+        {% if formulario %}
+            <a href="{% url 'cursos:responder_formulario' formulario_id=formulario.id %}"
+               class="btn btn-success btn-lg">
+                Responder evaluación de la simulación
+            </a>
+        {% endif %}
 
         <a href="{% url 'cursos:detalle' curso.pk %}"
            class="btn btn-secondary btn-lg ml-2">

@@ -9,7 +9,7 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            <h4>Puntaje obtenido: {{ evaluacion.puntaje|floatformat:2 }}%</h4>
+            <h4 class="mb-2">Puntaje obtenido: {{ evaluacion.puntaje|floatformat:2 }}%</h4>
 
             {% if evaluacion.aprobado %}
                 <span class="badge badge-success">APROBADO</span>
@@ -19,28 +19,47 @@
         </div>
     </div>
 
-    <h3>Respuestas</h3>
-    <ul class="list-group">
+    <h3 class="mb-3">Respuestas</h3>
+
+    <ul class="list-group mb-4">
         {% for r in respuestas %}
             <li class="list-group-item">
                 <strong>{{ r.pregunta.texto }}</strong><br>
 
                 {% if r.pregunta.tipo == "A" %}
-                    <em>Tu respuesta:</em> {{ r.respuesta_texto }}
+                    <em>Tu respuesta:</em>
+                    {{ r.respuesta_texto|default:"(sin respuesta)" }}
                 {% else %}
-                    <em>Tu respuesta:</em> {{ r.opcion.texto }}
+                    <em>Tu respuesta:</em>
+                    {% if r.opcion %}
+                        {{ r.opcion.texto }}
+                    {% else %}
+                        (sin respuesta)
+                    {% endif %}
                 {% endif %}
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">
+                No hay respuestas registradas.
             </li>
         {% endfor %}
     </ul>
 
-    {% if evaluacion.aprobado and siguiente_modulo %}
-        <a href="{% url 'cursos:detalle' siguiente_modulo.curso.id %}#mod{{ siguiente_modulo.id }}"
-            class="btn btn-success mt-4">
-               Ir al siguiente módulo
-        </a>
-    {% endif %}
+    <div class="mt-3 d-flex flex-wrap" style="gap:10px;">
+        {% if evaluacion.aprobado and siguiente_modulo %}
+            <a href="{% url 'cursos:detalle' siguiente_modulo.curso.pk %}#modulo-{{ siguiente_modulo.id }}"
+               class="btn btn-success">
+                Ir al siguiente módulo
+            </a>
+        {% endif %}
 
+        {% if modulo_actual %}
+            <a href="{% url 'cursos:detalle' modulo_actual.curso.pk %}"
+               class="btn btn-secondary">
+                Volver al curso
+            </a>
+        {% endif %}
+    </div>
 
 </div>
 {% endblock content %}

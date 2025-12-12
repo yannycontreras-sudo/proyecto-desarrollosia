@@ -74,15 +74,6 @@ class Simulacion(models.Model):
         related_name="simulacion",
     )
 
-    # ✅ ESTE ES EL CAMPO QUE FALTABA
-    formulario = models.ForeignKey(
-        "Formulario",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="simulaciones",
-    )
-
     video = models.FileField(
         upload_to="simulaciones/videos/",
         blank=True,
@@ -97,6 +88,8 @@ class Simulacion(models.Model):
 
     def __str__(self):
         return self.nombre
+
+
 
 
 

@@ -30,19 +30,11 @@
                     <a href="{% url 'cursos:modulo_crear' curso.pk %}" class="btn btn-primary mb-2">
                         Crear módulo
                     </a>
-                    {# 🔴 NUEVO: botón para ir a la PANTALLA DE CONFIRMACIÓN DE ELIMINAR #}
                     <a href="{% url 'cursos:curso_confirmar_eliminar' curso.pk %}"
                        class="btn btn-danger mb-2">
                         Eliminar curso
                     </a>
                 {% endif %}
-            {% endif %}
-
-            {% if user.role == "student" or user.role == "alumno" %}
-                <a href="{% url 'cursos:simulaciones_por_curso' curso.id %}"
-                       class="btn btn-info mt-2">
-                           Ver simulaciones
-                </a>
             {% endif %}
 
             {# INSCRIPCIÓN ALUMNO #}
@@ -93,6 +85,16 @@
                                                 <i class="fas fa-unlock"></i> Disponible
                                             </span>
                                         </div>
+
+                                        {# Botón "Ver simulación" (si el módulo tiene simulación) #}
+                                        {% if modulo.simulacion %}
+                                        <div>
+                                            <a href="{% url 'cursos:iniciar_simulacion' modulo.simulacion.id %}"
+                                               class="btn btn-info btn-sm">
+                                                Ver simulación
+                                            </a>
+                                        </div>
+                                        {% endif %}
                                     </div>
 
                                     <div id="mod{{ modulo.id }}"
@@ -114,13 +116,11 @@
                                                                              alt="{{ contenido.titulo }}"
                                                                              class="img-fluid mt-2"
                                                                              style="max-width:400px;">
-
                                                                     {% elif contenido.es_video %}
                                                                         <video controls class="mt-2" style="max-width:100%;">
                                                                             <source src="{{ contenido.archivo.url }}" type="video/mp4">
                                                                             Tu navegador no soporta videos.
                                                                         </video>
-
                                                                     {% else %}
                                                                         <a href="{{ contenido.archivo.url }}"
                                                                            class="mt-2 d-inline-block btn btn-sm btn-outline-primary"
@@ -152,7 +152,6 @@
                                                                         {% endfor %}
                                                                     {% endif %}
                                                                 {% endwith %}
-
                                                             </div>
                                                         </div>
                                                     </li>
@@ -376,24 +375,37 @@
                                                         {% if modulo.simulacion.formulario %}
                                                             <a href="{% url 'cursos:detalle_formulario' modulo.simulacion.formulario.pk %}"
                                                                class="btn btn-outline-secondary btn-sm mr-1">
-                                                                Editar
+                                                                Ver / editar formulario
                                                             </a>
                                                             <a href="{% url 'cursos:respuestas_formulario' modulo.simulacion.formulario.pk %}"
                                                                class="btn btn-outline-success btn-sm">
                                                                 Respuestas
                                                             </a>
                                                         {% else %}
-                                                            <span class="badge badge-warning">Sin formulario</span>
+                                                            <span class="badge badge-warning mr-2">Sin formulario</span>
                                                         {% endif %}
+
+                                                        <a href="{% url 'cursos:crear_simulacion' modulo.id %}"
+                                                           class="btn btn-primary btn-sm">
+                                                            Editar simulación
+                                                        </a>
                                                     </div>
                                                 </div>
                                             </div>
+                                        {% else %}
+                                            <div class="alert alert-warning mt-3 d-flex justify-content-between align-items-center">
+                                                <span>No hay simulación creada para este módulo.</span>
+                                                <a href="{% url 'cursos:crear_simulacion' modulo.id %}"
+                                                   class="btn btn-primary btn-sm">
+                                                    Crear simulación
+                                                </a>
+                                            </div>
                                         {% endif %}
 
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
+                                    </div>  {# card-body #}
+                                </div>      {# collapse #}
+                            </div>          {# card #}
+                        {% endif %}        {# fin if estudiante / else docente #}
 
                     {% endfor %}
 

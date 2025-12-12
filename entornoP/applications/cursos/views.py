@@ -40,6 +40,7 @@ from .models import (
     ProgresoModulo,
     Simulacion,
     ProgresoSimulacion,
+    
 )
 
 User= get_user_model()
@@ -1013,8 +1014,11 @@ def mis_notas_view(request):
 def iniciar_simulacion(request, simulacion_id):
     """
     Vista para que el ESTUDIANTE inicie una simulación.
-    Registra el inicio en ProgresoSimulacion
-    y redirige al formulario para responder.
+    Ahora:
+    - Valida permisos e inscripción
+    - Registra progreso
+    - Muestra los contenidos del módulo (videos / imágenes)
+    - Desde ahí el alumno pasa a la evaluación (formulario)
     """
     simulacion = get_object_or_404(Simulacion, id=simulacion_id)
     usuario = request.user
@@ -1029,7 +1033,7 @@ def iniciar_simulacion(request, simulacion_id):
 
     if not Inscripcion.objects.filter(usuario=usuario, curso=curso).exists():
         messages.error(request, "No estás inscrito en este curso.")
-        return redirect("cursos:detalle", pk=curso.pk)
+        return redirect("core:home")
 
     # Verificar que el módulo esté publicado
     if not modulo.publicado:
@@ -1046,7 +1050,7 @@ def iniciar_simulacion(request, simulacion_id):
 
     formulario = simulacion.formulario
 
-    # Si YA respondió este formulario → no repetir, marcar como completada y mandar a resultados
+    # Si YA respondió este formulario → no repetir, mandar directo a resultados
     evaluacion_existente = Evaluacion.objects.filter(
         usuario=usuario,
         formulario=formulario
@@ -1081,25 +1085,129 @@ def iniciar_simulacion(request, simulacion_id):
         progreso.fecha_fin = None
         progreso.save()
 
+    # 👉 NUEVO: en vez de ir directo a responder_formulario,
+    # mostramos una página con los contenidos del módulo
+    contenidos = modulo.contenidos.all().order_by("id")
+
     messages.success(request, f"Simulación '{simulacion.nombre}' iniciada.")
-    return redirect("cursos:responder_formulario", formulario_id=formulario.id)
+
+    return render(
+        request,
+        "cursos/simulacion_detalle.html",
+        {
+            "curso": curso,
+            "modulo": modulo,
+            "simulacion": simulacion,
+            "formulario": formulario,
+            "contenidos": contenidos,
+        },
+    )
+
+
+
 
 @login_required
-def simulaciones_por_curso(request, curso_id):
-    curso = get_object_or_404(Curso, id=curso_id)
+def asignar_simulacion_modulo(request, modulo_id):
+    """
+    Permite a un docente/admin elegir qué simulación se asocia a un módulo.
+    """
+    modulo = get_object_or_404(Modulo, pk=modulo_id)
 
-    # Validación: solo estudiantes inscritos pueden verlas
-    if getattr(request.user, "role", None) not in ["student", "alumno"] and not request.user.is_superuser:
-        messages.error(request, "Solo los estudiantes pueden ver simulaciones.")
-        return redirect("core:home")
+    # Permisos: solo teacher, admin o superuser
+    if not (
+        getattr(request.user, "role", None) in ["teacher", "admin"]
+        or request.user.is_superuser
+    ):
+        return HttpResponseForbidden("No tienes permisos para asignar simulaciones.")
 
-    if not Inscripcion.objects.filter(usuario=request.user, curso=curso).exists():
-        messages.error(request, "No estás inscrito en este curso.")
-        return redirect("core:home")
+    # Si tu modelo Simulacion tiene FK a Curso, puedes filtrar:
+    # simulaciones = Simulacion.objects.filter(modulo__curso=modulo.curso).distinct()
+    # Por ahora, usamos todas:
+    simulaciones = Simulacion.objects.all()
 
-    simulaciones = Simulacion.objects.filter(modulo__curso=curso)
+    if request.method == "POST":
+        simulacion_id = request.POST.get("simulacion_id")
 
-    return render(request, "cursos/simulaciones_por_curso.html", {
-        "curso": curso,
-        "simulaciones": simulaciones
+        if simulacion_id:
+            simulacion = get_object_or_404(Simulacion, pk=simulacion_id)
+            modulo.simulacion = simulacion
+            modulo.save()
+
+            # Vuelta al detalle del curso
+            return redirect("cursos:detalle", pk=modulo.curso.pk)
+
+    # Si es GET o POST sin simulación elegida, mostramos el formulario
+    context = {
+        "modulo": modulo,
+        "simulaciones": simulaciones,
+    }
+    return render(request, "cursos/asignar_simulacion.html", context)
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render, redirect
+from .models import Modulo, Simulacion, Formulario  # ajusta import según tu organización
+
+
+@login_required
+def crear_simulacion(request, modulo_id):
+    modulo = get_object_or_404(Modulo, id=modulo_id)
+
+    # Solo docentes / admins
+    if request.user.role not in ["teacher", "admin"] and not request.user.is_superuser:
+        return redirect("cursos:detalle", pk=modulo.curso.pk)
+
+    if request.method == "POST":
+        nombre = request.POST.get("nombre", "").strip()
+        descripcion = request.POST.get("descripcion", "").strip()
+        formulario_id = request.POST.get("formulario")  # <--- OJO: name="formulario" en el template
+
+        video = request.FILES.get("video")
+        imagen = request.FILES.get("imagen")
+        contenido_html = request.POST.get("contenido_html", "")
+
+        # Si ya hay simulación para este módulo, la actualizamos
+        if hasattr(modulo, "simulacion"):
+            simulacion = modulo.simulacion
+            simulacion.nombre = nombre
+            simulacion.descripcion = descripcion
+            if video:
+                simulacion.video = video
+            if imagen:
+                simulacion.imagen = imagen
+            simulacion.contenido_html = contenido_html
+            simulacion.save()
+        else:
+            simulacion = Simulacion.objects.create(
+                modulo=modulo,
+                nombre=nombre,
+                descripcion=descripcion,
+                video=video,
+                imagen=imagen,
+                contenido_html=contenido_html,
+            )
+
+        # Asociar formulario si se eligió uno
+        if formulario_id:
+            try:
+                formulario = Formulario.objects.get(pk=formulario_id)
+                formulario.simulacion = simulacion
+                formulario.save()
+            except Formulario.DoesNotExist:
+                pass
+
+        return redirect("cursos:detalle", pk=modulo.curso.pk)
+
+    # GET: aquí cargamos los formularios disponibles para ESTE módulo/curso
+    # Si tus formularios están ligados a contenidos del módulo:
+    formularios = Formulario.objects.filter(contenido__modulo=modulo).distinct()
+    # Si quieres TODOS los formularios, usa:
+    # formularios = Formulario.objects.all()
+
+    simulacion_existente = getattr(modulo, "simulacion", None)
+
+    return render(request, "cursos/crear_simulacion.html", {
+        "modulo": modulo,
+        "formularios": formularios,
+        "simulacion": simulacion_existente,
     })

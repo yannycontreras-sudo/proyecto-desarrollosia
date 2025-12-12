@@ -65,16 +65,32 @@ class Modulo(models.Model):
 
 
 class Simulacion(models.Model):
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, null=True)
+
+    # Relación con el módulo (esto sí lo queremos)
     modulo = models.OneToOneField(
-        Modulo,
+        "Modulo",
         on_delete=models.CASCADE,
         related_name="simulacion",
     )
-    nombre = models.CharField(max_length=255)
-    descripcion = models.TextField(blank=True)
+
+    video = models.FileField(
+        upload_to="simulaciones/videos/",
+        blank=True,
+        null=True,
+    )
+    imagen = models.ImageField(
+        upload_to="simulaciones/imagenes/",
+        blank=True,
+        null=True,
+    )
+    contenido_html = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre
+
+
 
 
 class Contenido(models.Model):
@@ -363,3 +379,5 @@ class ProgresoSimulacion(models.Model):
 
     def __str__(self):
         return f"{self.usuario} - {self.simulacion} ({self.estado})"
+    
+

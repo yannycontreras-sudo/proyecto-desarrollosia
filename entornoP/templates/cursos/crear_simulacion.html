@@ -1,0 +1,82 @@
+{% extends "home.html" %}
+
+{% block title %}Crear simulación{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2>Crear simulación para el módulo: {{ modulo.titulo }}</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Nombre de la simulación</label>
+            <input type="text" name="nombre" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label>Descripción</label>
+            <textarea name="descripcion" class="form-control"></textarea>
+        </div>
+
+        <!-- FORMULARIO ASOCIADO -->
+        <div class="form-group">
+            <label for="selectFormulario">Seleccionar formulario asociado (evaluación)</label>
+            <select id="selectFormulario" name="formulario" class="form-control">
+                <option value="">-- Sin evaluación --</option>
+                {% for f in formularios %}
+                    <option value="{{ f.id }}">{{ f.nombre }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- BOTÓN DINÁMICO PARA EDITAR FORMULARIO -->
+            <a id="btnEditarFormulario"
+               href="#"
+               class="btn btn-outline-primary mt-2"
+               style="display:none;"
+               target="_blank">
+                ✏️ Editar preguntas del formulario
+            </a>
+        </div>
+
+        <div class="form-group">
+            <label>Subir video</label>
+            <input type="file" name="video" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Subir imagen</label>
+            <input type="file" name="imagen" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Contenido HTML / instrucciones</label>
+            <textarea name="contenido_html" class="form-control" rows="6"></textarea>
+        </div>
+
+        <button class="btn btn-success">Guardar simulación</button>
+        <a href="{% url 'cursos:detalle' modulo.curso.id %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+<!-- SCRIPT PARA ACTIVAR BOTÓN EDITAR FORMULARIO -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const select = document.getElementById("selectFormulario");
+    const btn = document.getElementById("btnEditarFormulario");
+
+    select.addEventListener("change", function() {
+        const formularioID = this.value;
+
+        if (formularioID) {
+            // URL para editar preguntas del formulario
+            btn.href = `/cursos/formularios/${formularioID}/preguntas/editar/`;
+            btn.style.display = "inline-block";
+        } else {
+            btn.style.display = "none";
+        }
+    });
+});
+</script>
+
+{% endblock %}

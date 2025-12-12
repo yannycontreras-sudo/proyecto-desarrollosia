@@ -1,0 +1,82 @@
+{% extends "home.html" %}
+
+{% block title %}Simulación - {{ simulacion.nombre }}{% endblock title %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h2 class="mb-3">
+        Simulación: {{ simulacion.nombre }}
+    </h2>
+    <p class="text-muted">
+        Curso: {{ curso.nombre }}<br>
+        Módulo: {{ modulo.titulo }}
+    </p>
+
+    {% if simulacion.descripcion %}
+        <div class="alert alert-info">
+            {{ simulacion.descripcion }}
+        </div>
+    {% endif %}
+
+    <hr>
+
+    <h4 class="mb-3">Material de la simulación</h4>
+
+    {% if contenidos %}
+        {% for contenido in contenidos %}
+            <div class="mb-4">
+
+                <h5>{{ contenido.titulo }}</h5>
+
+                {# VIDEO EN GRANDE #}
+                {% if contenido.archivo and contenido.es_video %}
+                    <video controls style="width: 100%; max-width: 900px; display:block; margin-bottom:10px;">
+                        <source src="{{ contenido.archivo.url }}" type="video/mp4">
+                        Tu navegador no soporta videos.
+                    </video>
+
+                {# IMAGEN EN GRANDE #}
+                {% elif contenido.archivo and contenido.es_imagen %}
+                    <img src="{{ contenido.archivo.url }}"
+                         alt="{{ contenido.titulo }}"
+                         style="width: 100%; max-width: 900px; display:block; margin-bottom:10px;">
+
+                {# OTRO TIPO DE ARCHIVO #}
+                {% elif contenido.archivo %}
+                    <a href="{{ contenido.archivo.url }}"
+                       class="btn btn-outline-primary"
+                       target="_blank">
+                        Ver recurso
+                    </a>
+                {% endif %}
+
+                {% if contenido.descripcion %}
+                    <p class="text-muted mb-0">
+                        {{ contenido.descripcion }}
+                    </p>
+                {% endif %}
+
+            </div>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">
+            Este módulo no tiene contenidos cargados aún.
+        </p>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'cursos:responder_formulario' formulario.id %}"
+           class="btn btn-success btn-lg">
+            Responder evaluación de la simulación
+        </a>
+
+        <a href="{% url 'cursos:detalle' curso.pk %}"
+           class="btn btn-secondary btn-lg ml-2">
+            Volver al curso
+        </a>
+    </div>
+
+</div>
+{% endblock content %}

@@ -21,13 +21,14 @@ from .views import (
     crear_formulario,
     respuestas_formulario,
     resultado_formulario,
-    iniciar_simulacion,
     reportes_desempeno,
     exportar_reporte_csv,
     curso_confirmar_eliminar,
     curso_eliminar,
     mis_notas_view,
-    simulaciones_por_curso,
+    asignar_simulacion_modulo,
+    iniciar_simulacion,
+    crear_simulacion,
 
 )
 
@@ -79,6 +80,12 @@ urlpatterns = [
         ActualizarProgresoModulo.as_view(),
         name="actualizar_progreso",
     ),
+    path(
+        "modulo/<int:modulo_id>/asignar-simulacion/",
+        asignar_simulacion_modulo,
+        name="asignar_simulacion_modulo",
+    ),
+ 
 
 
     # contenidos
@@ -96,7 +103,7 @@ urlpatterns = [
     path(
         "simulacion/<int:simulacion_id>/iniciar/",
         iniciar_simulacion,
-        name="iniciar_simulacion"
+        name="iniciar_simulacion",
     ),
 
     # formularios (docente)
@@ -147,22 +154,28 @@ urlpatterns = [
     path(
         "formularios/<int:formulario_id>/resultado/",
         resultado_formulario,
-        name="resultado_formulario"
+        name="resultado_formulario",
     ),
    
 
     path(
         "reportes/",
         reportes_desempeno, 
-        name="reportes_desempeno"
+        name="reportes_desempeno",
         ),
 
     path("reportes/csv/",
         exportar_reporte_csv, 
-        name="exportar_reporte_csv"
+        name="exportar_reporte_csv",
         ),
+        path(
+            "modulo/<int:modulo_id>/crear-simulacion/",
+            crear_simulacion,
+            name="crear_simulacion",
+            ),
 
-    path("curso/<int:curso_id>/simulaciones/", simulaciones_por_curso, name="simulaciones_por_curso"),
+
+
 
 
 
